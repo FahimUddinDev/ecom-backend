@@ -1,0 +1,30 @@
+// Prisma schema file
+
+model User {
+  id        Int      @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  role      String   @default("user")
+  status    Boolean  @default(false)
+  verified  Boolean  @default(false)
+  avatar    String?
+  kyc       Kyc?
+}
+
+model Kyc {
+  title  String
+  userId Int    @unique
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}

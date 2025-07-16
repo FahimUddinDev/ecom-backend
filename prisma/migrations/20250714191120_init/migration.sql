@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE `user` MODIFY `createdAt` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
+    MODIFY `role` VARCHAR(191) NULL DEFAULT 'user',
+    MODIFY `status` BOOLEAN NULL DEFAULT false,
+    MODIFY `verified` BOOLEAN NULL DEFAULT false;
