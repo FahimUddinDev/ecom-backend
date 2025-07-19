@@ -101,7 +101,14 @@ export const deleteUser = async (
   next: NextFunction
 ) => {
   try {
-    await userService.deleteUser(+req.params.id);
+    const { user } = req as Request & {
+      user: { data: { id: number; role: string } };
+    };
+    await userService.deleteUser({
+      id: +req.params.id,
+      role: user.data.role,
+      authId: user.data.id,
+    });
     res.status(200).json({ message: "Deleted user successfully." });
   } catch (err) {
     next(err);

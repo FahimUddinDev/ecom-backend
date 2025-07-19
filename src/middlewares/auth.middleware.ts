@@ -2,7 +2,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-export const authenticate = (
+export const authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -11,7 +11,7 @@ export const authenticate = (
   if (!token) return res.status(401).json({ message: "No token provided" });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET as string);
     (req as any).user = decoded;
     next();
   } catch (err) {

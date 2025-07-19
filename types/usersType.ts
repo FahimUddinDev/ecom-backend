@@ -16,3 +16,10 @@ export interface Kyc {
   userId: number;
   user?: User;
 }
+
+export interface GooglePayload {
+  email: string;
+  given_name: string;
+  family_name?: string;
+  picture?: string;
+}

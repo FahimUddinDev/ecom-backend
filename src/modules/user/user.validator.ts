@@ -6,7 +6,7 @@ export const userRegisterSchema = yup.object({
   lastName: yup.string().required("Last name is required"),
   email: yup.string().email().required("Email is required"),
   password: yup.string().min(6).required("Password is required"),
-  role: yup.string().oneOf(["user", "admin"]).optional(),
+  role: yup.string().oneOf(["user", "admin", "seller"]).optional(),
   status: yup.boolean().optional(),
   verified: yup.boolean().optional(),
 });

@@ -16,14 +16,16 @@ export const registerUser = async ({
   const existing = await userModel.findUser({ where: { email } });
   if (existing) throw new HttpError("Email already exist!", 409);
   const hashedPassword = await bcrypt.hash(password, 10);
-  return userModel.createUser({
+  const user = await userModel.createUser({
     firstName: firstName.toLowerCase(),
-    lastName: lastName.toLowerCase(),
+    lastName: lastName?.toLowerCase(),
     email,
     password: hashedPassword,
     role,
+    status: !role || role === "user" ? true : false,
     avatar: avatar ? `/public/${avatar}` : null,
   });
+  return { ...user, kyc: { status: "false" } };
 };
 
 export const getAllUsers = async (query: {
@@ -93,7 +95,11 @@ export const getAllUsers = async (query: {
       status: true,
       verified: true,
       avatar: true,
-      kyc: true,
+      kyc: {
+        select: {
+          status: true,
+        },
+      },
     },
   });
 
@@ -118,10 +124,14 @@ export const getUser = async (query: { id: number } | { email: string }) => {
       status: true,
       verified: true,
       avatar: true,
-      kyc: true,
+      kyc: {
+        select: {
+          status: true,
+        },
+      },
     },
   });
-  if (!user) throw new Error("User not found");
+  if (!user) throw new HttpError("User Not found!", 404);
   return user;
 };
 
@@ -159,4 +169,17 @@ export const updateUser = async (
   return userModel.updateUser(id, data);
 };
 
-export const deleteUser = (id: number) => userModel.deleteUser(id);
+export const deleteUser = ({
+  id,
+  role,
+  authId,
+}: {
+  id: number;
+  authId: number;
+  role: string;
+}) => {
+  if ((role === "user" || role === "seller") && id !== authId) {
+    throw new HttpError("Permission denied!", 403);
+  }
+  return userModel.deleteUser(id);
+};

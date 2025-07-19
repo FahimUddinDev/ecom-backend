@@ -1,6 +1,7 @@
 // User routes
 import { Router } from "express";
 
+import { authenticate } from "../../middlewares/auth.middleware";
 import { handleUpload } from "../../middlewares/multer.middleware";
 import { validate } from "../../middlewares/validate.middleware";
 import * as userController from "./user.controller";
@@ -20,10 +21,11 @@ router
   .route("/:id")
   .get(userController.getUser)
   .put(
+    authenticate,
     handleUpload({ avatar: 1 }),
     validate({ body: userUpdateSchema }),
     userController.updateUser
   )
-  .delete(userController.deleteUser);
+  .delete(authenticate, userController.deleteUser);
 
 export default router;

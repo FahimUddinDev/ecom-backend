@@ -14,11 +14,27 @@ export const createUser = async (
   return prisma.user.create({ data });
 };
 
-export const updateUser = async (
-  id: number,
-  data: Partial<User>
-): Promise<User> => {
-  return prisma.user.update({ where: { id }, data });
+export const updateUser = async (id: number, data: Partial<User>) => {
+  return prisma.user.update({
+    where: { id },
+    data,
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      createdAt: true,
+      role: true,
+      status: true,
+      verified: true,
+      avatar: true,
+      kyc: {
+        select: {
+          status: true,
+        },
+      },
+    },
+  });
 };
 
 export const deleteUser = async (id: number): Promise<User> => {

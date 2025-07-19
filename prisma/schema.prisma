@@ -3,7 +3,7 @@
 model User {
   id        Int      @id @default(autoincrement())
   firstName String
-  lastName  String
+  lastName  String?
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
@@ -15,9 +15,24 @@ model User {
 }
 
 model Kyc {
-  title  String
-  userId Int    @unique
-  user   User   @relation(fields: [userId], references: [id])
+  id        Int      @id @default(autoincrement())
+  title     String
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
+  status    String   @default("pending") // e.g., pending, approved, rejected
+  createdAt DateTime @default(now())
+}
+
+model Smtp {
+  id         Int      @id @default(autoincrement())
+  host       String
+  encryption String
+  port       Int
+  userName   String
+  password   String
+  createdAt  DateTime @default(now())
+  secure     Boolean  @default(false)
+  isDefault  Boolean  @default(false)
 }
 
 generator client {
