@@ -35,6 +35,14 @@ model Smtp {
   isDefault  Boolean  @default(false)
 }
 
+model EmailTemplate {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  subject   String
+  body      String
+  createdAt DateTime @default(now())
+}
+
 generator client {
   provider = "prisma-client-js"
 }

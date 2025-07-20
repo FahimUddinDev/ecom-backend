@@ -29,3 +29,11 @@ export const createUser = async (
 ): Promise<User> => {
   return prisma.user.create({ data });
 };
+
+export const findEmailTemplate = async (
+  query: Prisma.EmailTemplateFindUniqueArgs
+) => {
+  return prisma.emailTemplate.findUnique({
+    where: query.where,
+  });
+};

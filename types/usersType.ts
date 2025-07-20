@@ -23,3 +23,12 @@ export interface GooglePayload {
   family_name?: string;
   picture?: string;
 }
+
+export interface SendMailData {
+  to: string;
+  template: {
+    subject?: string;
+    body: string;
+  };
+  [key: string]: any; // allows dynamic variables like name, password
+}

@@ -1,4 +1,5 @@
 import nodemailer, { Transporter } from "nodemailer";
+import { SendMailData } from "../../types/usersType";
 import { findAllSmtp } from "../modules/smtp/smtp.model";
 
 interface SmtpConfig {
@@ -29,34 +30,35 @@ const createTransporter = ({
 };
 
 // Send password mail with failover SMTP support
-export const sendPasswordMail = async ({
-  to,
-  name,
-  password,
-}: {
-  to: string;
-  name: string;
-  password: string;
-}): Promise<boolean> => {
+export const sendPasswordMail = async (
+  data: SendMailData
+): Promise<boolean> => {
   const smtpConfigs: SmtpConfig[] = await findAllSmtp();
 
   if (!smtpConfigs || smtpConfigs.length === 0) {
-    throw new Error(" No SMTP configuration found");
+    throw new Error("No SMTP configuration found");
   }
 
+  if (!data.template || !data.template.body) {
+    throw new Error("Email template is required");
+  }
+
+  const result = data.template.body.replace(/\$\{(\w+)\}/g, (_, key) => {
+    return data[key] ?? "";
+  });
+
   const mailOptionsTemplate = {
-    to,
-    subject: "Welcome to Our App!",
-    html: `<h2>Hi ${name},</h2><p>Your account has been created successfully! Your password is: <strong>${password}</strong></p>`,
+    to: data.to,
+    subject: data.template.subject || "Your Account Password",
+    html: result,
   };
 
   let lastError: unknown = null;
 
   for (const smtpConfig of smtpConfigs) {
-    // You must calculate secure value if not provided
     const configWithSecure: SmtpConfig = {
       ...smtpConfig,
-      secure: smtpConfig.port === 465, // infer secure if needed
+      secure: smtpConfig.port === 465,
     };
 
     const transporter = createTransporter(configWithSecure);

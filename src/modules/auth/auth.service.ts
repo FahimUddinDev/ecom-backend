@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import { GooglePayload } from "../../../types/usersType";
 import { HttpError } from "../../utils/customError";
 import { sendPasswordMail } from "../../utils/sendMail";
-import { createUser, findUser } from "./auth.model";
+import { createUser, findEmailTemplate, findUser } from "./auth.model";
 
 export const registerUser = async ({
   firstName,
@@ -120,7 +120,17 @@ export const googleLoginUser = async (payload: GooglePayload) => {
       role: "user",
       verified: true,
     });
-    sendPasswordMail({ to: newUser.email, name: newUser.firstName, password });
+    const template = await findEmailTemplate({
+      where: { name: "newPassword" },
+    });
+    if (template) {
+      sendPasswordMail({
+        to: newUser.email,
+        name: newUser.firstName,
+        password,
+        template,
+      });
+    }
   }
 
   const accountUser = user ?? { ...newUser, kyc: { status: "false" } };
