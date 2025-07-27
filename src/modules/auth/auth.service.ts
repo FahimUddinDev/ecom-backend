@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import { GooglePayload } from "../../../types/usersType";
 import { HttpError } from "../../utils/customError";
 import { sendPasswordMail } from "../../utils/sendMail";
-import { createUser, findEmailTemplate, findUser } from "./auth.model";
+import * as authModel from "./auth.model";
 
 export const registerUser = async ({
   firstName,
@@ -15,23 +15,25 @@ export const registerUser = async ({
   password,
   role,
   avatar,
+  verified,
 }: Prisma.UserCreateInput) => {
   const pic = avatar
     ? avatar?.includes("http")
       ? avatar
       : `/public/${avatar}`
     : null;
-  const existing = await findUser(email);
+  const existing = await authModel.findUser(email);
   if (existing) throw new HttpError("Email already exist!", 409);
   const hashedPassword = await bcrypt.hash(password, 10);
-  return createUser({
+  return authModel.createUser({
     firstName: firstName.toLowerCase(),
     lastName: lastName?.toLowerCase(),
     email,
     password: hashedPassword,
     role,
-    status: !role || role === "user" ? true : false,
+    status: !role || role === "user" ? "active" : "pending",
     avatar: pic,
+    verified: verified ?? false,
   });
 };
 
@@ -44,12 +46,12 @@ export const loginUser = async ({
   password: string;
   isRemember: boolean;
 }) => {
-  const user = await findUser(email);
+  const user = await authModel.findUser(email);
   if (!user) {
     throw new HttpError("Email or password is wrong!", 404);
   }
-  if (!user.status) {
-    throw new HttpError("Your account has been suspended.", 403);
+  if (user.status !== "active") {
+    throw new HttpError("Your are not eligible.", 403);
   }
   if (!user.verified) {
     throw new HttpError("Your account is not verified.", 403);
@@ -99,8 +101,8 @@ export const googleLoginUser = async (payload: GooglePayload) => {
   if (!payload.email || !payload.given_name) {
     throw new HttpError("Invalid payload!", 400);
   }
-  let user = await findUser(payload.email);
-  if (user && !user.status) {
+  let user = await authModel.findUser(payload.email);
+  if (user && user.status !== "active") {
     throw new HttpError("Your account has been suspended.", 403);
   }
 
@@ -108,19 +110,21 @@ export const googleLoginUser = async (payload: GooglePayload) => {
   const password = randomBytes(12)
     .toString("base64")
     .slice(0, 12)
-    .replace(/\+/g, "A") // Replace unsafe URL characters
+    .replace(/\+/g, "A")
     .replace(/\//g, "B");
+  const hashedPassword = await bcrypt.hash(password, 10);
   if (!user) {
     newUser = await registerUser({
       email: payload.email,
       firstName: payload.given_name,
       lastName: payload.family_name,
       avatar: payload.picture,
-      password: "", // Google doesn't provide password
+      password: hashedPassword,
       role: "user",
+      status: "active",
       verified: true,
     });
-    const template = await findEmailTemplate({
+    const template = await authModel.findEmailTemplate({
       where: { name: "newPassword" },
     });
     if (template) {
@@ -160,4 +164,9 @@ export const googleLoginUser = async (payload: GooglePayload) => {
     avatar: accountUser?.avatar,
     kyc: accountUser?.kyc,
   };
+};
+
+export const resetPassword = async (id: number, newPassword: string) => {
+  const password = await bcrypt.hash(newPassword, 10);
+  return authModel.resetPassword(id, password);
 };

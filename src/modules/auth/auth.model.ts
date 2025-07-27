@@ -37,3 +37,10 @@ export const findEmailTemplate = async (
     where: query.where,
   });
 };
+
+export const resetPassword = async (id: number, password: string) => {
+  return prisma.user.update({
+    where: { id },
+    data: { password },
+  });
+};

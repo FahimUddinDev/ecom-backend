@@ -22,7 +22,7 @@ export const registerUser = async ({
     email,
     password: hashedPassword,
     role,
-    status: !role || role === "user" ? true : false,
+    status: !role || role === "user" ? "active" : "pending",
     avatar: avatar ? `/public/${avatar}` : null,
   });
   return { ...user, kyc: { status: "false" } };
@@ -33,7 +33,7 @@ export const getAllUsers = async (query: {
   limit?: number;
   search?: string;
   role?: string;
-  status?: boolean;
+  status?: string;
   verified?: boolean;
   kyc?: boolean;
   createdAt?: string | { from?: string; to?: string };
@@ -55,7 +55,7 @@ export const getAllUsers = async (query: {
   }
 
   if (query.role) where.role = query.role;
-  if (typeof query.status === "boolean") where.status = query.status;
+  if (typeof query.status) where.status = query.status;
   if (typeof query.verified === "boolean") where.verified = query.verified;
   if (typeof query.kyc === "boolean") where.kyc = query.kyc;
 
