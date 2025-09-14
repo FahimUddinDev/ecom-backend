@@ -1,5 +1,16 @@
 // Prisma schema file
 
+enum Status {
+  active
+  inactive
+  draft
+}
+
+enum DiscountType {
+  percentage
+  fixed
+}
+
 model User {
   id           Int            @id @default(autoincrement())
   firstName    String
@@ -11,13 +22,18 @@ model User {
   status       String         @default("pending") // e.g., active, inActive
   verified     Boolean        @default(false)
   avatar       String?
-  kyc          Kyc?
   verification Verification[]
+  kyc          Kyc?
+  reviews      Review[]
+  products     Product[]
+  Coupon       Coupon[]
+  CouponUsage  CouponUsage[]
 }
 
 model Kyc {
   id        Int      @id @default(autoincrement())
   title     String
+  document  String
   userId    Int      @unique
   user      User     @relation(fields: [userId], references: [id])
   status    String   @default("pending") // e.g., pending, approved, rejected
@@ -51,6 +67,203 @@ model Verification {
   token     String   @unique
   createdAt DateTime @default(now())
   expiresAt DateTime
+}
+
+model Product {
+  id               Int               @id @default(autoincrement())
+  sellerId         Int
+  seller           User              @relation(fields: [sellerId], references: [id])
+  name             String
+  soldQuantity     Int               @default(0)
+  ShortDescription String?
+  description      String?
+  price            Decimal           @db.Decimal(10, 2)
+  currency         String            @default("USD") @db.Char(3)
+  sku              String?           @unique
+  stockQuantity    Int               @default(0)
+  categoryId       Int?
+  subCategoryId    Int?
+  childCategoryId  Int?
+  hasVariants      Boolean           @default(false)
+  status           Status            @default(active)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  images           String
+  tags             String
+  additionalInfo   AdditionalInfo[]
+  variants         Variant[]
+  offers           OfferOnProduct[]
+  reviews          Review[]
+  CouponOnProduct  CouponOnProduct[]
+}
+
+model AdditionalInfo {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  name      String
+  value     String
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Variant {
+  id              Int               @id @default(autoincrement())
+  product         Product           @relation(fields: [productId], references: [id])
+  productId       Int
+  price           Decimal           @db.Decimal(10, 2)
+  currency        String            @default("USD") @db.Char(3)
+  stockQuantity   Int               @default(0)
+  sku             String?
+  soldQuantity    Int               @default(0)
+  status          Status            @default(active)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  type            String
+  name            String
+  images          String
+  OfferOnVariant  OfferOnVariant[]
+  CouponOnVariant CouponOnVariant[]
+  Categories      Categories[]
+}
+
+model Offer {
+  id            Int          @id @default(autoincrement())
+  name          String
+  description   String?
+  discountType  DiscountType
+  discountValue Decimal      @db.Decimal(10, 2)
+  startDate     DateTime
+  endDate       DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // relations
+  products OfferOnProduct[]
+  variants OfferOnVariant[]
+}
+
+model OfferOnProduct {
+  // join table
+  offer     Offer   @relation(fields: [offerId], references: [id])
+  offerId   Int
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+
+  @@id([offerId, productId]) // composite primary key
+}
+
+model OfferOnVariant {
+  // optional join table if you also want offers per variant
+  offer     Offer   @relation(fields: [offerId], references: [id])
+  offerId   Int
+  variant   Variant @relation(fields: [variantId], references: [id])
+  variantId Int
+
+  @@id([offerId, variantId])
+}
+
+model Coupon {
+  id            Int          @id @default(autoincrement())
+  code          String       @unique
+  referralCode  String?      @unique
+  description   String?
+  discountType  DiscountType
+  discountValue Decimal      @db.Decimal(10, 2)
+  usageLimit    Int? // optional: how many times coupon can be used
+  usedCount     Int          @default(0)
+  startDate     DateTime
+  endDate       DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // relations
+  products       CouponOnProduct[]
+  variants       CouponOnVariant[]
+  sellers        User?             @relation(fields: [sellerId], references: [id])
+  sellerId       Int?
+  CouponReferral CouponReferral[]
+  CouponUsage    CouponUsage[]
+  Categories     Categories[]
+}
+
+model CouponReferral {
+  id        Int      @id @default(autoincrement())
+  coupon    Coupon   @relation(fields: [couponId], references: [id])
+  couponId  Int
+  ipAddress String?
+  userId    Int? // if they sign up
+  createdAt DateTime @default(now())
+}
+
+model CouponUsage {
+  id       Int      @id @default(autoincrement())
+  coupon   Coupon   @relation(fields: [couponId], references: [id])
+  couponId Int
+  user     User     @relation(fields: [userId], references: [id])
+  userId   Int
+  usedAt   DateTime @default(now())
+
+  @@unique([couponId, userId]) // ensures one usage per user per coupon
+}
+
+model CouponOnProduct {
+  coupon    Coupon  @relation(fields: [couponId], references: [id])
+  couponId  Int
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+
+  @@id([couponId, productId])
+}
+
+model CouponOnVariant {
+  coupon    Coupon  @relation(fields: [couponId], references: [id])
+  couponId  Int
+  variant   Variant @relation(fields: [variantId], references: [id])
+  variantId Int
+
+  @@id([couponId, variantId])
+}
+
+model Categories {
+  id              Int               @id @default(autoincrement())
+  name            String            @unique
+  thumbnail       String?
+  Variant         Variant?          @relation(fields: [variantId], references: [id])
+  variantId       Int?
+  Coupon          Coupon?           @relation(fields: [couponId], references: [id])
+  couponId        Int?
+  SubCategories   SubCategories[]
+  ChildCategories ChildCategories[]
+}
+
+model SubCategories {
+  id              Int               @id @default(autoincrement())
+  name            String
+  thumbnail       String?
+  categoryId      Int
+  category        Categories        @relation(fields: [categoryId], references: [id])
+  ChildCategories ChildCategories[]
+}
+
+model ChildCategories {
+  id            Int           @id @default(autoincrement())
+  name          String
+  thumbnail     String?
+  categoryId    Int
+  category      Categories    @relation(fields: [categoryId], references: [id])
+  subCategoryId Int
+  subCategory   SubCategories @relation(fields: [subCategoryId], references: [id])
 }
 
 generator client {

@@ -14,7 +14,7 @@ export const userRegisterSchema = yup.object({
 export const userUpdateSchema = yup.object({
   firstName: yup.string().optional(),
   lastName: yup.string().optional(),
-  role: yup.string().oneOf(["user", "admin"]).optional(),
+  role: yup.string().oneOf(["user", "admin", "seller"]).optional(),
   status: yup.boolean().optional(),
   verified: yup.boolean().optional(),
   kyc: yup.boolean().optional(),

@@ -169,7 +169,7 @@ export const updateUser = async (
   return userModel.updateUser(id, data);
 };
 
-export const deleteUser = ({
+export const deleteUser = async ({
   id,
   role,
   authId,

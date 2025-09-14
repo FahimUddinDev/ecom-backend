@@ -1,6 +1,15 @@
 import { NextFunction, Request, Response } from "express";
 import * as verificationServices from "./verification.service";
 
+export interface AuthenticatedRequest extends Request {
+  user: {
+    data: {
+      id: number;
+      role: string;
+    };
+  };
+}
+
 export const createVerification = async (
   req: Request,
   res: Response,
@@ -46,23 +55,51 @@ export const forgotPasswordVerify = async (
   res.json(updatedVerification);
 };
 
-// const createKyc = async (req: Request, res: Response, next: NextFunction) => {
-//   const { userId, kycData } = req.body;
-//   const kyc = await createKycService({
-//     userId,
-//     ...kycData,
-//   });
-//   res.json("KYC created successfully");
-// };
-// export const getKyc = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   const { userId } = req.body;
-//   const kyc = await getKycService(userId);
-//   res.json(kyc);
-// };
+export const createKyc = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = (req as AuthenticatedRequest).user;
+  const id = user?.data?.id;
+  const { document, title } = req.body;
+  const kyc = await verificationServices.createKyc({
+    id,
+    document,
+    title,
+  });
+  res.json(kyc);
+};
+
+export const getKycs = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = (req as AuthenticatedRequest).user;
+  if (user.data.role !== "admin") {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  const query = await req.query;
+  const kycs = await verificationServices.getKycs(query);
+  res.json(kycs);
+};
+
+export const getKyc = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = (req as AuthenticatedRequest).user;
+  const { id } = req.params;
+  const userId = Number(id);
+  if (user.data.role !== "admin" && user.data.id !== userId) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  const kyc = await verificationServices.getKyc(userId);
+  res.json(kyc);
+};
 // export const updateKyc = async (
 //   req: Request,
 //   res: Response,

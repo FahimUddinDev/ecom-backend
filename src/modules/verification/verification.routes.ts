@@ -1,7 +1,9 @@
 import { Router } from "express";
+import { authenticate } from "../../middlewares/auth.middleware";
+import { handleUpload } from "../../middlewares/multer.middleware";
 import { validate } from "../../middlewares/validate.middleware";
 import * as verificationController from "./verification.controller";
-import { VerificationSchema } from "./verification.validator";
+import { KycSchema, VerificationSchema } from "./verification.validator";
 const router = Router();
 router
   .route("/")
@@ -16,4 +18,14 @@ router
     validate({ body: VerificationSchema }),
     verificationController.forgotPasswordVerify
   );
+router
+  .route("/kyc")
+  .post(
+    authenticate,
+    handleUpload({ document: 1 }),
+    validate({ body: KycSchema }),
+    verificationController.createKyc
+  )
+  .get(authenticate, verificationController.getKycs);
+router.route("/kyc/:id").get(authenticate, verificationController.getKyc);
 export default router;
