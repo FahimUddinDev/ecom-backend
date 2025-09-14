@@ -10,7 +10,7 @@ const router = Router();
 
 router
   .route("/")
-  // .get(categoryController.getUsers)
+  .get(categoryController.getCategories)
   .post(
     handleUpload({ thumbnail: 1 }),
     validate({ body: categorySchema }),

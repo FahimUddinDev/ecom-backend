@@ -20,3 +20,15 @@ export const createCategory = async (
     next(err);
   }
 };
+export const getCategories = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const category = await categoryService.getCategories();
+    res.status(200).json(category);
+  } catch (err) {
+    next(err);
+  }
+};

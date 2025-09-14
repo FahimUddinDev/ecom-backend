@@ -81,9 +81,12 @@ model Product {
   currency         String            @default("USD") @db.Char(3)
   sku              String?           @unique
   stockQuantity    Int               @default(0)
-  categoryId       Int?
-  subCategoryId    Int?
-  childCategoryId  Int?
+  categoryId       Int
+  category         Categories        @relation(fields: [categoryId], references: [id])
+  subCategoryId    Int
+  subCategory      SubCategories     @relation(fields: [subCategoryId], references: [id])
+  childCategoryId  Int
+  childCategory    ChildCategories   @relation(fields: [childCategoryId], references: [id])
   hasVariants      Boolean           @default(false)
   status           Status            @default(active)
   createdAt        DateTime          @default(now())
@@ -236,15 +239,15 @@ model CouponOnVariant {
 }
 
 model Categories {
-  id              Int               @id @default(autoincrement())
-  name            String            @unique
-  thumbnail       String?
-  Variant         Variant?          @relation(fields: [variantId], references: [id])
-  variantId       Int?
-  Coupon          Coupon?           @relation(fields: [couponId], references: [id])
-  couponId        Int?
-  SubCategories   SubCategories[]
-  ChildCategories ChildCategories[]
+  id            Int             @id @default(autoincrement())
+  name          String          @unique
+  thumbnail     String?
+  Variant       Variant?        @relation(fields: [variantId], references: [id])
+  variantId     Int?
+  Coupon        Coupon?         @relation(fields: [couponId], references: [id])
+  couponId      Int?
+  subCategories SubCategories[]
+  Products      Product[]
 }
 
 model SubCategories {
@@ -253,17 +256,17 @@ model SubCategories {
   thumbnail       String?
   categoryId      Int
   category        Categories        @relation(fields: [categoryId], references: [id])
-  ChildCategories ChildCategories[]
+  childCategories ChildCategories[]
+  Products        Product[]
 }
 
 model ChildCategories {
   id            Int           @id @default(autoincrement())
   name          String
   thumbnail     String?
-  categoryId    Int
-  category      Categories    @relation(fields: [categoryId], references: [id])
   subCategoryId Int
   subCategory   SubCategories @relation(fields: [subCategoryId], references: [id])
+  Products      Product[]
 }
 
 generator client {
