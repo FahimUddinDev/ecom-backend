@@ -24,12 +24,12 @@ export const getCategories = async () => {
       id: true,
       name: true,
       thumbnail: true,
-      SubCategories: {
+      subCategories: {
         select: {
           id: true,
           name: true,
           thumbnail: true,
-          ChildCategories: {
+          childCategories: {
             select: {
               id: true,
               name: true,
@@ -52,12 +52,12 @@ export const getCategory = async (query: { id: number } | { name: string }) => {
       id: true,
       name: true,
       thumbnail: true,
-      SubCategories: {
+      subCategories: {
         select: {
           id: true,
           name: true,
           thumbnail: true,
-          ChildCategories: {
+          childCategories: {
             select: {
               id: true,
               name: true,
@@ -74,12 +74,16 @@ export const getCategory = async (query: { id: number } | { name: string }) => {
 
 export const updateCategory = async (
   id: number,
+  role: string,
   data: Partial<{
     name: string;
-    thumbnail: string;
+    thumbnail: string | null;
   }>
 ) => {
-  // 2. Delete old avatar if new avatar is provided
+  if (role !== "admin") {
+    throw new HttpError("Permission denied!", 403);
+  }
+  // 2. Delete old thumbnail if new thumbnail is provided
   if (data?.thumbnail) {
     const existingCategory = await categoryModel.findCategory({
       where: { id },
@@ -98,7 +102,6 @@ export const updateCategory = async (
       });
     }
   }
-
   return categoryModel.updateCategory(id, data);
 };
 

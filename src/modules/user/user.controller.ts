@@ -109,7 +109,7 @@ export const deleteUser = async (
       role: user.data.role,
       authId: user.data.id,
     });
-    res.status(200).json({ message: "Deleted user successfully." });
+    res.status(204).json({ message: "Deleted user successfully." });
   } catch (err) {
     next(err);
   }
