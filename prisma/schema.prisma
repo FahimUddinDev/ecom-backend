@@ -258,6 +258,8 @@ model SubCategories {
   category        Categories        @relation(fields: [categoryId], references: [id])
   childCategories ChildCategories[]
   Products        Product[]
+
+  @@unique([name, categoryId])
 }
 
 model ChildCategories {
@@ -267,6 +269,8 @@ model ChildCategories {
   subCategoryId Int
   subCategory   SubCategories @relation(fields: [subCategoryId], references: [id])
   Products      Product[]
+
+  @@unique([name, subCategoryId])
 }
 
 generator client {

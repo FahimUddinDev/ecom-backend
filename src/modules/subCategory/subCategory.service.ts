@@ -1,78 +1,80 @@
-import { Prisma } from "@prisma/client";
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 import { prisma } from "../../config/prisma";
 import { HttpError } from "../../utils/customError";
-import * as categoryModel from "./category.model";
+import * as subCategoryModel from "./subCategory.model";
 
-export const createCategory = async ({
+export const createSubCategory = async ({
+  categoryId,
   name,
   thumbnail,
-}: Prisma.CategoriesCreateInput) => {
-  const existing = await categoryModel.findCategory({ where: { name } });
+}: {
+  categoryId: number;
+  name: string;
+  thumbnail: string | null;
+}) => {
+  const existing = await subCategoryModel.findSubCategory({
+    where: {
+      name_categoryId: {
+        name,
+        categoryId: +categoryId,
+      },
+    },
+  });
   if (existing) throw new HttpError("This category already exist!", 409);
-  const category = await categoryModel.createCategory({
+  const subCategory = await subCategoryModel.createSubCategory({
+    category: { connect: { id: +categoryId } },
     name: name.toLowerCase(),
     thumbnail: thumbnail ? `/public/${thumbnail}` : null,
   });
-  return category;
+  return subCategory;
 };
 
-export const getCategories = async () => {
-  const query = {
+export const getSubCategories = async (userQuery: { categoryId?: string }) => {
+  const categoryId = userQuery.categoryId;
+  let query;
+  query = {
     select: {
       id: true,
       name: true,
       thumbnail: true,
-      subCategories: {
+      childCategories: {
         select: {
           id: true,
           name: true,
           thumbnail: true,
-          childCategories: {
-            select: {
-              id: true,
-              name: true,
-              thumbnail: true,
-            },
-          },
         },
       },
     },
   };
-
-  const categories = await categoryModel.findCategories(query);
-  return categories;
+  if (typeof categoryId === "string") {
+    query = { ...query, where: { categoryId: parseInt(categoryId) } };
+  }
+  const subCategories = await subCategoryModel.findSubCategories(query);
+  return subCategories;
 };
 
-export const getCategory = async (query: { id: number } | { name: string }) => {
-  const category = await categoryModel.findCategory({
+export const getSubCategory = async (query: { id: number }) => {
+  const subCategory = await subCategoryModel.findSubCategory({
     where: query,
     select: {
       id: true,
       name: true,
       thumbnail: true,
-      subCategories: {
+      childCategories: {
         select: {
           id: true,
           name: true,
           thumbnail: true,
-          childCategories: {
-            select: {
-              id: true,
-              name: true,
-              thumbnail: true,
-            },
-          },
         },
       },
     },
   });
-  if (!category) throw new HttpError("Category Not found!", 404);
-  return category;
+  if (!subCategory) throw new HttpError("Sub Category Not found!", 404);
+  return subCategory;
 };
 
-export const updateCategory = async (
+export const updateSubCategory = async (
   id: number,
   role: string,
   data: Partial<{
@@ -85,10 +87,10 @@ export const updateCategory = async (
   }
   // 2. Delete old thumbnail if new thumbnail is provided
   if (data?.thumbnail) {
-    const existingCategory = await categoryModel.findCategory({
+    const existingSubCategory = await subCategoryModel.findSubCategory({
       where: { id },
     });
-    const oldThumbnailPath = existingCategory?.thumbnail;
+    const oldThumbnailPath = existingSubCategory?.thumbnail;
 
     if (oldThumbnailPath) {
       const filename = oldThumbnailPath.replace("/public/", "");
@@ -102,10 +104,10 @@ export const updateCategory = async (
       });
     }
   }
-  return categoryModel.updateCategory(id, data);
+  return subCategoryModel.updateSubCategory(id, data);
 };
 
-export const deleteCategory = async ({
+export const deleteSubCategory = async ({
   id,
   role,
 }: {
@@ -117,29 +119,29 @@ export const deleteCategory = async ({
   }
 
   // Check if category exists
-  const category = await categoryModel.findCategory({
+  const subCategory = await subCategoryModel.findSubCategory({
     where: { id },
     select: { id: true, thumbnail: true },
   });
-  if (!category) {
+  if (!subCategory) {
     throw new HttpError("Category not found!", 404);
   }
 
-  // Check if category has any subcategories
-  const subCategoriesCount = await prisma.subCategories.count({
-    where: { categoryId: id },
+  // Check if category has any child categories
+  const childCategoriesCount = await prisma.childCategories.count({
+    where: { subCategoryId: id },
   });
 
-  if (subCategoriesCount > 0) {
+  if (childCategoriesCount > 0) {
     throw new HttpError(
-      `Cannot delete category. It has ${subCategoriesCount} subcategories. Please delete all subcategories first.`,
+      `Cannot delete category. It has ${childCategoriesCount} subcategories. Please delete all subcategories first.`,
       400
     );
   }
 
   // Check if category has any products
   const productsCount = await prisma.product.count({
-    where: { categoryId: id },
+    where: { subCategoryId: id },
   });
 
   if (productsCount > 0) {
@@ -150,8 +152,8 @@ export const deleteCategory = async ({
   }
 
   // Delete the category thumbnail file if it exists
-  if (category?.thumbnail) {
-    const filename = category.thumbnail.replace("/public/", "");
+  if (subCategory?.thumbnail) {
+    const filename = subCategory.thumbnail.replace("/public/", "");
     const filePath = path.join(__dirname, "../../../../uploads", filename);
     fs.access(filePath, fs.constants.F_OK, (err) => {
       if (!err) {
@@ -162,5 +164,5 @@ export const deleteCategory = async ({
     });
   }
 
-  return categoryModel.deleteCategory(id);
+  return subCategoryModel.deleteSubCategory(id);
 };
