@@ -1,5 +1,6 @@
 // Combine all routes
 import { Router } from "express";
+import addressRoutes from "../modules/address/address.routes";
 import authRouter from "../modules/auth/auth.routes";
 import categoriesRoutes from "../modules/category/category.routes";
 import childCategoriesRoutes from "../modules/childCategory/childCategory.routes";
@@ -18,6 +19,7 @@ router.use("/verify", verificationRoutes);
 router.use("/categories", categoriesRoutes);
 router.use("/sub-categories", subCategoriesRoutes);
 router.use("/child-categories", childCategoriesRoutes);
+router.use("/address", addressRoutes);
 // router.use("/products", productsRoutes);
 
 export default router;

@@ -28,6 +28,7 @@ model User {
   products     Product[]
   Coupon       Coupon[]
   CouponUsage  CouponUsage[]
+  Address      Address[]
 }
 
 model Kyc {
@@ -271,6 +272,23 @@ model ChildCategories {
   Products      Product[]
 
   @@unique([name, subCategoryId])
+}
+
+model Address {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  street      String
+  city        String
+  state       String
+  country     String
+  addressLine String
+  postalCode  String?
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 generator client {
