@@ -54,69 +54,73 @@ export const getAddresses = async (
   }
 };
 
-// export const getAddress = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const query = await req.params.slug;
-//     let address;
-//     if (parseInt(query)) {
-//       address = await addressService.getAddress({ id: +query });
-//     } else {
-//       address = await addressService.getAddress({ name: query });
-//     }
+export const getAddress = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const query = await req.params.slug;
+    const address = await addressService.getAddress({ id: +query });
+    res.status(200).json(address);
+  } catch (err) {
+    next(err);
+  }
+};
 
-//     res.status(200).json(address);
-//   } catch (err) {
-//     next(err);
-//   }
-// };
+export const updateAddress = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = await req.params.slug;
+    const { user } = req as Request & {
+      user: { data: { id: number; role: string } };
+    };
+    const data: {
+      street?: string;
+      city?: string;
+      state?: string;
+      country?: string;
+      postalCode?: string;
+      latitude?: number;
+      longitude?: number;
+      addressLine?: string;
+    } = req.body;
+    const address = await addressService.updateAddress(
+      parseInt(id),
+      user.data.role,
+      user.data.id,
+      {
+        ...data,
+      }
+    );
 
-// export const updateAddress = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const id = await req.params.slug;
-//     const { user } = req as Request & {
-//       user: { data: { id: number; role: string } };
-//     };
-//     const { name, thumbnail }: Categories = req.body;
-//     const address = await addressService.updateAddress(
-//       parseInt(id),
-//       user.data.role,
-//       {
-//         name,
-//         thumbnail,
-//       }
-//     );
+    res.status(200).json(address);
+  } catch (err) {
+    next(err);
+  }
+};
 
-//     res.status(200).json(address);
-//   } catch (err) {
-//     next(err);
-//   }
-// };
+export const deleteAddress = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = await req.params.slug;
+    const { user } = req as Request & {
+      user: { data: { id: number; role: string } };
+    };
+    await addressService.deleteAddress({
+      id: parseInt(id),
+      role: user.data.role,
+      userId: user.data.id,
+    });
 
-// export const deleteAddress = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const id = await req.params.slug;
-//     const { user } = req as Request & {
-//       user: { data: { id: number; role: string } };
-//     };
-//     await addressService.deleteAddress({
-//       id: parseInt(id),
-//       role: user.data.role,
-//     });
-
-//     res.status(204).json({ message: "Deleted address successfully." });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
+    res.status(204).json({ message: "Deleted address successfully." });
+  } catch (err) {
+    next(err);
+  }
+};

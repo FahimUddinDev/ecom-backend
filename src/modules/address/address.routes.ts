@@ -16,14 +16,13 @@ router
     validate({ body: addressSchema }),
     addressController.createAddress
   );
-// router
-//   .route("/:slug")
-//   .get(addressController.getCategory)
-//   .put(
-//     authenticate,
-//     handleUpload({ thumbnail: 1 }),
-//     validate({ body: addressSchema }),
-//     addressController.updateCategory
-//   )
-//   .delete(authenticate, addressController.deleteCategory);
+router
+  .route("/:slug")
+  .get(addressController.getAddress)
+  .put(
+    authenticate,
+    validate({ body: addressSchema }),
+    addressController.updateAddress
+  )
+  .delete(authenticate, addressController.deleteAddress);
 export default router;
