@@ -45,6 +45,7 @@ export const getAddresses = async (queryParams: {
     : queryParams.userId;
 
   const findArgs: any = {
+    where: { status: true },
     select: {
       id: true,
       userId: true,
@@ -60,7 +61,7 @@ export const getAddresses = async (queryParams: {
   };
 
   if (rawUserId) {
-    findArgs.where = { userId: +rawUserId };
+    findArgs.where = { ...findArgs.where, userId: +rawUserId };
   }
 
   const addresses = await addressModel.findAddresses(findArgs);
@@ -69,7 +70,7 @@ export const getAddresses = async (queryParams: {
 
 export const getAddress = async (query: { id: number }) => {
   const address = await addressModel.findAddress({
-    where: query,
+    where: { ...query, status: true },
     select: {
       id: true,
       userId: true,
@@ -103,7 +104,7 @@ export const updateAddress = async (
   }
 ) => {
   const existingAddress = await addressModel.findAddress({
-    where: { id },
+    where: { id, status: true },
   });
   if (role === "admin" || userId === existingAddress?.userId) {
     return addressModel.updateAddress(id, data);
@@ -129,21 +130,31 @@ export const deleteAddress = async ({
     throw new HttpError("Address not found!", 404);
   }
   if (role === "admin" || userId === address.userId) {
-    // Block deletion if any active orders use this address
-    const activeOrderCount = await prisma.orders.count({
+    // 1) Block deletion if any ACTIVE orders reference this address
+    const activeOrdersCount = await prisma.orders.count({
       where: {
         status: "active",
         OR: [{ deliveryAddressId: id }, { pickupAddressId: id }],
       },
     });
-
-    if (activeOrderCount > 0) {
+    if (activeOrdersCount > 0) {
       throw new HttpError(
-        `Cannot delete address. It is used by ${activeOrderCount} active order(s).`,
+        `Cannot delete address. It is used by ${activeOrdersCount} active order(s).`,
         400
       );
     }
 
+    // 2) If there are ANY orders (non-active), soft delete the address
+    const anyOrdersCount = await prisma.orders.count({
+      where: {
+        OR: [{ deliveryAddressId: id }, { pickupAddressId: id }],
+      },
+    });
+    if (anyOrdersCount > 0) {
+      return addressModel.updateAddress(id, { status: false });
+    }
+
+    // 3) No orders reference this address: hard delete
     return addressModel.deleteAddress(id);
   }
   throw new HttpError("Permission denied!", 403);

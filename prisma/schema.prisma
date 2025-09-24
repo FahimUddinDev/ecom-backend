@@ -276,6 +276,7 @@ model ChildCategories {
 
 model Address {
   id          Int      @id @default(autoincrement())
+  status      Boolean  @default(true)
   userId      Int
   street      String
   city        String

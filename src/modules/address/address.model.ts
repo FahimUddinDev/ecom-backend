@@ -1,5 +1,5 @@
 // User model
-import { Address, Prisma } from "@prisma/client";
+import { Address, Orders, Prisma } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 
 export const findAddress = async (
@@ -39,4 +39,7 @@ export const updateAddress = async (id: number, data: Partial<Address>) => {
 
 export const deleteAddress = async (id: number): Promise<Address> => {
   return prisma.address.delete({ where: { id } });
+};
+export const findOrders = async (query: {}): Promise<Orders[] | null> => {
+  return prisma.orders.findMany(query);
 };
