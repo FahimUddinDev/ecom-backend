@@ -93,6 +93,7 @@ model Product {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   images           String
+  thumbnail        String
   tags             String
   additionalInfo   AdditionalInfo[]
   variants         Variant[]

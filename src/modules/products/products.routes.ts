@@ -1,20 +1,22 @@
-// // User routes
-// import { Router } from "express";
+// Products routes
+import { Router } from "express";
 
-// import { handleUpload } from "../../middlewares/multer.middleware";
-// import { validate } from "../../middlewares/validate.middleware";
-// import * as productsController from "./products.controller";
-// import { productsRegisterSchema } from "./products.validator";
+import { authenticate } from "../../middlewares/auth.middleware";
+import { handleUpload } from "../../middlewares/multer.middleware";
+import { validate } from "../../middlewares/validate.middleware";
+import * as productsController from "./products.controller";
+import { productSchema } from "./products.validator";
 
-// const router = Router();
+const router = Router();
 
-// router
-//   .route("/")
-//   .get(productsController.getUsers)
-//   .post(
-//     handleUpload({ avatar: 1 }),
-//     validate({ body: productsRegisterSchema }),
-//     productsController.register
-//   );
+router
+  .route("/")
+  //   .get(productsController.getProducts)
+  .post(
+    authenticate,
+    handleUpload({ images: 10, thumbnail: 1 }),
+    validate({ body: productSchema }),
+    productsController.createProduct
+  );
 
-// export default router;
+export default router;

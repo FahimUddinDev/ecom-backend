@@ -1,27 +1,59 @@
-// import { Prisma } from "@prisma/client";
-// import bcrypt from "bcrypt";
-// import { HttpError } from "../../utils/customError";
-// import * as userModel from "./user.model";
+import { Prisma } from "@prisma/client";
+import * as productModel from "./products.model";
 
-// export const registerUser = async ({
-//   firstName,
-//   lastName,
-//   email,
-//   password,
-//   role,
-//   avatar,
-// }: Prisma.UserCreateInput) => {
-//   const existing = await userModel.findUser({ where: { email } });
-//   if (existing) throw new HttpError("Email already exist!", 409);
-//   const hashedPassword = await bcrypt.hash(password, 10);
-//   const user = await userModel.createUser({
-//     firstName: firstName.toLowerCase(),
-//     lastName: lastName?.toLowerCase(),
-//     email,
-//     password: hashedPassword,
-//     role,
-//     status: !role || role === "user" ? "active" : "pending",
-//     avatar: avatar ? `/public/${avatar}` : null,
-//   });
-//   return { ...user, kyc: { status: "false" } };
-// };
+export const createProduct = async ({
+  sellerId,
+  name,
+  ShortDescription,
+  description,
+  price,
+  currency,
+  sku,
+  stockQuantity,
+  categoryId,
+  subCategoryId,
+  childCategoryId,
+  hasVariants,
+  images,
+  thumbnail,
+  tags,
+}: {
+  sellerId: number;
+  name: string;
+  ShortDescription?: string | null;
+  description?: string | null;
+  price: Prisma.Decimal;
+  currency: string;
+  sku: string | null;
+  stockQuantity: number;
+  categoryId: number;
+  subCategoryId: number;
+  childCategoryId: number;
+  hasVariants: boolean;
+  images: string;
+  thumbnail: string;
+  tags: string;
+}) => {
+  const product = await productModel.createProduct({
+    seller: { connect: { id: +sellerId } },
+    name,
+    ShortDescription,
+    description,
+    price,
+    currency,
+    sku,
+    stockQuantity: Number(stockQuantity),
+    category: { connect: { id: +categoryId } },
+    subCategory: { connect: { id: +subCategoryId } },
+    childCategory: { connect: { id: +childCategoryId } },
+    hasVariants: hasVariants === "true",
+    images: JSON.stringify(images),
+    thumbnail,
+    tags: JSON.stringify(tags),
+  });
+  return {
+    ...product,
+    images: JSON.parse(product.images),
+    tags: JSON.parse(product.tags),
+  };
+};
