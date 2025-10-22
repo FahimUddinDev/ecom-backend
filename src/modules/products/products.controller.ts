@@ -8,7 +8,6 @@ export const createProduct = async (
   next: NextFunction
 ) => {
   try {
-    // Destructure without typing as Product because req.body is raw input
     const {
       sellerId,
       name,
@@ -30,25 +29,36 @@ export const createProduct = async (
     const { user } = req as Request & {
       user: { data: { id: number; role: string } };
     };
-    const product = await productsService.createProduct({
-      sellerId: sellerId || user.data.id,
-      name,
-      ShortDescription: ShortDescription ?? null,
-      description: description ?? null,
-      price: new Prisma.Decimal(price),
-      currency,
-      sku: sku ?? null,
-      stockQuantity,
-      categoryId,
-      subCategoryId,
-      childCategoryId,
-      hasVariants,
-      images,
-      thumbnail,
-      tags,
-    });
+    if (user.data.role === "admin" || user.data.role === "seller") {
+      if (user.data.role === "seller" && sellerId && sellerId != user.data.id) {
+        return res
+          .status(403)
+          .json({ message: "Only you can create products for yourself." });
+      }
+      const product = await productsService.createProduct({
+        sellerId: sellerId || user.data.id,
+        name,
+        ShortDescription: ShortDescription ?? null,
+        description: description ?? null,
+        price: new Prisma.Decimal(price),
+        currency,
+        sku: sku ?? null,
+        stockQuantity,
+        categoryId,
+        subCategoryId,
+        childCategoryId,
+        hasVariants,
+        images,
+        thumbnail,
+        tags,
+      });
 
-    res.status(201).json(product);
+      res.status(201).json(product);
+    } else {
+      return res
+        .status(403)
+        .json({ message: "You don't have permission to create products." });
+    }
   } catch (err) {
     next(err);
   }

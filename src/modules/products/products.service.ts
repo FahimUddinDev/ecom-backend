@@ -29,11 +29,12 @@ export const createProduct = async ({
   categoryId: number;
   subCategoryId: number;
   childCategoryId: number;
-  hasVariants: boolean;
+  hasVariants: string;
   images: string;
   thumbnail: string;
   tags: string;
 }) => {
+  const variant = hasVariants === "true";
   const product = await productModel.createProduct({
     seller: { connect: { id: +sellerId } },
     name,
