@@ -11,7 +11,7 @@ export const createProduct = async (
     const {
       sellerId,
       name,
-      ShortDescription,
+      shortDescription,
       description,
       price,
       currency,
@@ -38,7 +38,7 @@ export const createProduct = async (
       const product = await productsService.createProduct({
         sellerId: sellerId || user.data.id,
         name,
-        ShortDescription: ShortDescription ?? null,
+        shortDescription: shortDescription ?? null,
         description: description ?? null,
         price: new Prisma.Decimal(price),
         currency,
@@ -63,19 +63,19 @@ export const createProduct = async (
     next(err);
   }
 };
-// export const getProducts = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const query = await req.query;
-//     const addresses = await addressService.getAddresses(query);
-//     res.status(200).json(addresses);
-//   } catch (err) {
-//     next(err);
-//   }
-// };
+export const getProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const query = await req.query;
+    const products = await productsService.getProducts(query);
+    res.status(200).json(products);
+  } catch (err) {
+    next(err);
+  }
+};
 
 // export const getAddress = async (
 //   req: Request,

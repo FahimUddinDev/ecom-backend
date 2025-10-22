@@ -76,7 +76,7 @@ model Product {
   seller           User              @relation(fields: [sellerId], references: [id])
   name             String
   soldQuantity     Int               @default(0)
-  ShortDescription String?
+  shortDescription String?
   description      String?
   price            Decimal           @db.Decimal(10, 2)
   currency         String            @default("USD") @db.Char(3)
@@ -95,11 +95,14 @@ model Product {
   images           String
   thumbnail        String
   tags             String
+  popularity       Int               @default(0)
+  trendingScore    Int               @default(0)
+  viewCount        Int               @default(0)
   additionalInfo   AdditionalInfo[]
   variants         Variant[]
   offers           OfferOnProduct[]
   reviews          Review[]
-  CouponOnProduct  CouponOnProduct[]
+  couponOnProduct  CouponOnProduct[]
 }
 
 model AdditionalInfo {

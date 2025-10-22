@@ -12,7 +12,7 @@
 
 //     model Product {
 //       sellerId
-//       ShortDescription
+//       shortDescription
 //       description
 //       price
 //       currency

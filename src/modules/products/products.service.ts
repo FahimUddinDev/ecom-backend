@@ -4,7 +4,7 @@ import * as productModel from "./products.model";
 export const createProduct = async ({
   sellerId,
   name,
-  ShortDescription,
+  shortDescription,
   description,
   price,
   currency,
@@ -20,7 +20,7 @@ export const createProduct = async ({
 }: {
   sellerId: number;
   name: string;
-  ShortDescription?: string | null;
+  shortDescription?: string | null;
   description?: string | null;
   price: Prisma.Decimal;
   currency: string;
@@ -38,7 +38,7 @@ export const createProduct = async ({
   const product = await productModel.createProduct({
     seller: { connect: { id: +sellerId } },
     name,
-    ShortDescription,
+    shortDescription,
     description,
     price,
     currency,
@@ -57,4 +57,23 @@ export const createProduct = async ({
     images: JSON.parse(product.images),
     tags: JSON.parse(product.tags),
   };
+};
+
+export const getProducts = async (query: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  subCategory?: string;
+  childCategory?: string;
+  sellerId?: string;
+  priceRange?: { min?: string; max?: string };
+  inStock?: string;
+  rating?: string;
+  sortBy?: string;
+  createdAt?: string | { from?: string; to?: string };
+  orderBy?: "asc" | "desc";
+}) => {
+  const products = await productModel.findProducts();
+  return products;
 };

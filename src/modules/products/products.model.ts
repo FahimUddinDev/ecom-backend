@@ -7,3 +7,7 @@ export const createProduct = async (
 ): Promise<Product> => {
   return prisma.product.create({ data });
 };
+
+export const findProducts = async (): Promise<Product[] | null> => {
+  return prisma.product.findMany();
+};

@@ -11,7 +11,7 @@ const router = Router();
 
 router
   .route("/")
-  //   .get(productsController.getProducts)
+  .get(productsController.getProducts)
   .post(
     authenticate,
     handleUpload({ images: 10, thumbnail: 1 }),
