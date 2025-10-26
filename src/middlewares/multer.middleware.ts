@@ -11,15 +11,8 @@ const storage = multer.diskStorage({
   },
 });
 
-// ✅ Allow all file types — no fileFilter
 const multerInstance = multer({ storage });
 
-/**
- * Middleware for single/multiple field uploads.
- * Auto-attaches /public/<filename> to req.body[fieldName]
- *
- * @param fields - e.g. { avatar: 1, documents: 10 }
- */
 export const handleUpload = (fields: { [field: string]: number }) => {
   const multerFields = Object.entries(fields).map(([name, maxCount]) => ({
     name,

@@ -8,6 +8,29 @@ export const createProduct = async (
   return prisma.product.create({ data });
 };
 
-export const findProducts = async (): Promise<Product[] | null> => {
-  return prisma.product.findMany();
+export const findProducts = async (
+  query: Prisma.ProductFindManyArgs
+): Promise<Product[]> => {
+  return prisma.product.findMany(query);
+};
+
+export const countProducts = async (
+  query: Prisma.ProductCountArgs
+): Promise<number> => {
+  return prisma.product.count(query);
+};
+export const findProduct = async (
+  query: Prisma.ProductFindUniqueArgs
+): Promise<Product | null> => {
+  return prisma.product.findUnique(query);
+};
+
+export const updateProduct = async (
+  id: number,
+  data: Prisma.ProductUpdateInput
+): Promise<Product> => {
+  return prisma.product.update({
+    where: { id },
+    data,
+  });
 };

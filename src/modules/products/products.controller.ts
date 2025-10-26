@@ -29,15 +29,22 @@ export const createProduct = async (
     const { user } = req as Request & {
       user: { data: { id: number; role: string } };
     };
+
     if (user.data.role === "admin" || user.data.role === "seller") {
       if (user.data.role === "seller" && sellerId && sellerId != user.data.id) {
         return res
           .status(403)
           .json({ message: "Only you can create products for yourself." });
       }
+      const slug =
+        name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)+/g, "") + `-${Date.now()}`;
       const product = await productsService.createProduct({
         sellerId: sellerId || user.data.id,
         name,
+        slug,
         shortDescription: shortDescription ?? null,
         description: description ?? null,
         price: new Prisma.Decimal(price),
@@ -77,73 +84,77 @@ export const getProducts = async (
   }
 };
 
-// export const getAddress = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const query = await req.params.slug;
-//     const address = await addressService.getAddress({ id: +query });
-//     res.status(200).json(address);
-//   } catch (err) {
-//     next(err);
-//   }
-// };
+export const updateProduct = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {
+      sellerId,
+      name,
+      shortDescription,
+      description,
+      price,
+      currency,
+      sku,
+      stockQuantity,
+      categoryId,
+      subCategoryId,
+      childCategoryId,
+      hasVariants,
+      images,
+      imagesToRemove,
+      thumbnail,
+      tags,
+    } = req.body;
+    const updateData = Object.fromEntries(
+      Object.entries({
+        sellerId,
+        name,
+        shortDescription,
+        description,
+        price,
+        currency,
+        sku,
+        stockQuantity,
+        categoryId,
+        subCategoryId,
+        childCategoryId,
+        hasVariants,
+        images,
+        imagesToRemove,
+        thumbnail,
+        tags,
+      }).filter(([_, value]) => value !== undefined)
+    );
+    const { user } = req as Request & {
+      user: { data: { id: number; role: string } };
+    };
 
-// export const updateAddress = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const id = await req.params.slug;
-//     const { user } = req as Request & {
-//       user: { data: { id: number; role: string } };
-//     };
-//     const data: {
-//       street?: string;
-//       city?: string;
-//       state?: string;
-//       country?: string;
-//       postalCode?: string;
-//       latitude?: number;
-//       longitude?: number;
-//       addressLine?: string;
-//     } = req.body;
-//     const address = await addressService.updateAddress(
-//       parseInt(id),
-//       user.data.role,
-//       user.data.id,
-//       {
-//         ...data,
-//       }
-//     );
+    if (user.data.role === "admin" || user.data.role === "seller") {
+      if (user.data.role === "seller" && sellerId && sellerId != user.data.id) {
+        return res
+          .status(403)
+          .json({ message: "Only you can create products for yourself." });
+      }
 
-//     res.status(200).json(address);
-//   } catch (err) {
-//     next(err);
-//   }
-// };
+      if (updateData.price !== undefined) {
+        updateData.price = new Prisma.Decimal(updateData.price);
+      }
 
-// export const deleteAddress = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const id = await req.params.slug;
-//     const { user } = req as Request & {
-//       user: { data: { id: number; role: string } };
-//     };
-//     await addressService.deleteAddress({
-//       id: parseInt(id),
-//       role: user.data.role,
-//       userId: user.data.id,
-//     });
+      const product = await productsService.updateProduct(
+        +req.params.id,
+        updateData
+      );
 
-//     res.status(204).json({ message: "Deleted address successfully." });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
+      res.status(201).json(product);
+    } else {
+      return res
+        .status(403)
+        .json({ message: "You don't have permission to create products." });
+    }
+  } catch (err) {
+    next(err);
+  }
+};

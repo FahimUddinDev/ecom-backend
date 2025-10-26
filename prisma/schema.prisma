@@ -72,6 +72,7 @@ model Verification {
 
 model Product {
   id               Int               @id @default(autoincrement())
+  slug             String            @unique
   sellerId         Int
   seller           User              @relation(fields: [sellerId], references: [id])
   name             String
@@ -80,7 +81,7 @@ model Product {
   description      String?
   price            Decimal           @db.Decimal(10, 2)
   currency         String            @default("USD") @db.Char(3)
-  sku              String?           @unique
+  sku              String?
   stockQuantity    Int               @default(0)
   categoryId       Int
   category         Categories        @relation(fields: [categoryId], references: [id])
@@ -92,12 +93,13 @@ model Product {
   status           Status            @default(active)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
-  images           String
+  images           Json
   thumbnail        String
-  tags             String
+  tags             Json
   popularity       Int               @default(0)
   trendingScore    Int               @default(0)
   viewCount        Int               @default(0)
+  averageRating    Float?            @default(0)
   additionalInfo   AdditionalInfo[]
   variants         Variant[]
   offers           OfferOnProduct[]
