@@ -18,10 +18,14 @@ router
     validate({ body: productSchema }),
     productsController.createProduct
   );
-router.route("/:id").put(
-  authenticate,
-  handleUpload({ images: 10, thumbnail: 1 }),
-  // validate({ body: productSchema }),
-  productsController.updateProduct
-);
+router
+  .route("/:id")
+  .put(
+    authenticate,
+    handleUpload({ images: 10, thumbnail: 1 }),
+    // validate({ body: productSchema }),
+    productsController.updateProduct
+  )
+  .get(productsController.getProduct)
+  .delete(authenticate, productsController.deleteProduct);
 export default router;

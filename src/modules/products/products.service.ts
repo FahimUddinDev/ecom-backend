@@ -1,6 +1,8 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import fs from "fs";
 import path from "path";
+import { prisma } from "../../config/prisma";
+import { HttpError } from "../../utils/customError";
 import * as productModel from "./products.model";
 
 export const createProduct = async ({
@@ -168,10 +170,12 @@ export const getProducts = async (query: {
           lastName: true,
         },
       },
+      slug: true,
       name: true,
       soldQuantity: true,
       shortDescription: true,
       description: true,
+      orders: true,
       price: true,
       currency: true,
       sku: true,
@@ -340,4 +344,119 @@ export const updateProduct = async (
   const updatedProduct = await productModel.updateProduct(id, normalizedData);
 
   return updatedProduct;
+};
+
+export const getProduct = async (query: { id: number } | { slug: string }) => {
+  const product = await productModel.findProduct({
+    where: query,
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      shortDescription: true,
+      description: true,
+      price: true,
+      orders: true,
+      currency: true,
+      sku: true,
+      stockQuantity: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      subCategory: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      childCategory: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      hasVariants: true,
+      images: true,
+      thumbnail: true,
+      tags: true,
+      additionalInfo: true,
+      variants: true,
+      averageRating: true,
+      reviews: true,
+      createdAt: true,
+      updatedAt: true,
+      seller: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
+    },
+  });
+  if (!product) throw new HttpError("Product Not found!", 404);
+  return product;
+};
+
+export const deleteProduct = async ({
+  id,
+  role,
+  authId,
+}: {
+  id: number;
+  authId: number;
+  role: string;
+}) => {
+  const product = await productModel.findProduct({ where: { id } });
+  if (!product) throw new HttpError("Product not found!", 404);
+
+  const activeOrderCount = await productModel.countOrders({
+    where: { productId: id, status: "active" },
+  });
+
+  if (activeOrderCount > 0) {
+    throw new HttpError(
+      "Cannot delete product with active orders. Please resolve orders first.",
+      400
+    );
+  }
+
+  const orderCount = await productModel.countOrders({
+    where: { productId: id },
+  });
+
+  if (role !== "admin" && !(role === "seller" && product.sellerId === authId)) {
+    throw new HttpError("Permission denied!", 403);
+  }
+
+  if (orderCount > 0) {
+    return productModel.updateProduct(id, { status: "draft" });
+  }
+
+  await prisma.$transaction(async (tx: PrismaClient) => {
+    await tx.additionalInfo.deleteMany({
+      where: { productId: id },
+    });
+
+    await tx.variant.deleteMany({
+      where: { productId: id },
+    });
+
+    await tx.offerOnProduct.deleteMany({
+      where: { productId: id },
+    });
+
+    await tx.couponOnProduct.deleteMany({
+      where: { productId: id },
+    });
+    await tx.product.delete({
+      where: { id },
+    });
+  });
+
+  return { message: "Product and related data deleted successfully" };
 };

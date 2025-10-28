@@ -34,3 +34,13 @@ export const updateProduct = async (
     data,
   });
 };
+
+export const deleteProduct = async (id: number): Promise<Product> => {
+  return prisma.product.delete({ where: { id } });
+};
+
+export const countOrders = async (
+  query: Prisma.OrdersCountArgs
+): Promise<number> => {
+  return prisma.orders.count(query);
+};

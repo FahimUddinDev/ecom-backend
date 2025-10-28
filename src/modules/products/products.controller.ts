@@ -158,3 +158,43 @@ export const updateProduct = async (
     next(err);
   }
 };
+
+export const getProduct = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const query = await req.params.id;
+    let product;
+    if (parseInt(query)) {
+      product = await productsService.getProduct({ id: +query });
+    } else {
+      product = await productsService.getProduct({ slug: query });
+    }
+
+    res.json(product);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteProduct = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as Request & {
+      user: { data: { id: number; role: string } };
+    };
+    await productsService.deleteProduct({
+      id: +req.params.id,
+      role: user.data.role,
+      authId: user.data.id,
+    });
+    res.status(204).json({ message: "Deleted product successfully." });
+  } catch (err) {
+    next(err);
+  }
+};
