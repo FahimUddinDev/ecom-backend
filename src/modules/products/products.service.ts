@@ -153,7 +153,7 @@ export const getProducts = async (query: {
     orderBy.push({ createdAt: "desc" });
   }
 
-  // 🔥 Get total count before pagination
+  //  Get total count before pagination
   const total = await productModel.countProducts({ where });
   const products = await productModel.findProducts({
     where,
