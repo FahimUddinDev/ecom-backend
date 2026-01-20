@@ -1,20 +1,31 @@
-// // User routes
-// import { Router } from "express";
+// Products routes
+import { Router } from "express";
 
-// import { handleUpload } from "../../middlewares/multer.middleware";
-// import { validate } from "../../middlewares/validate.middleware";
-// import * as productsController from "./products.controller";
-// import { productsRegisterSchema } from "./products.validator";
+import { authenticate } from "../../../middlewares/auth.middleware";
+import { handleUpload } from "../../../middlewares/multer.middleware";
+import { validate } from "../../../middlewares/validate.middleware";
+import * as variantController from "./variant.controller";
+import { variantSchema } from "./variant.validator";
 
-// const router = Router();
+const router = Router();
 
+router
+  .route("/")
+  //   .get(productsController.getProducts)
+  .post(
+    authenticate,
+    handleUpload({ images: 10, thumbnail: 1 }),
+    validate({ body: variantSchema }),
+    variantController.createVariant,
+  );
 // router
-//   .route("/")
-//   .get(productsController.getUsers)
-//   .post(
-//     handleUpload({ avatar: 1 }),
-//     validate({ body: productsRegisterSchema }),
-//     productsController.register
-//   );
-
-// export default router;
+//   .route("/:id")
+//   .put(
+//     authenticate,
+//     handleUpload({ images: 10, thumbnail: 1 }),
+// validate({ body: productSchema }),
+//     productsController.updateProduct,
+//   )
+//   .get(productsController.getProduct)
+//   .delete(authenticate, productsController.deleteProduct);
+export default router;

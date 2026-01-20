@@ -1,51 +1,68 @@
-// // User controller
-// import { NextFunction, Request, Response } from "express";
-// import { User } from "../../../types/usersType";
-// import * as userService from "./user.service";
+// User controller
+import { NextFunction, Request, Response } from "express";
+import * as variantService from "./variant.service";
 
-// export const createProduct = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
+export const createVariant = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const {
+      sellerId,
+      productId,
+      price,
+      currency,
+      sku,
+      stockQuantity,
+      name,
+      images,
+      thumbnail,
+      type,
+    } = req.body;
 
-//     model Product {
-//       sellerId
-//       shortDescription
-//       description
-//       price
-//       currency
-//       sku
-//       stockQuantity
-//       categoryId
-//       subCategoryId
-//       childCategoryId
-//       status
-//       images
-//       tags
-//       variants
+    const { user } = req as Request & {
+      user: { data: { id: number; role: string } };
+    };
 
-//     }
+    const product = await variantService.getProduct(productId);
 
-//     model AdditionalInfo {
-//       productId
-//       name
-//       value
-//     }
-//     const { firstName, lastName, email, password, role, avatar }: User =
-//       req.body;
-//     const user = await userService.registerUser({
-//       firstName,
-//       lastName,
-//       email,
-//       password,
-//       role,
-//       avatar,
-//     });
+    if (user.data.role === "admin" || user.data.role === "seller") {
+      if (user.data.role === "seller" && sellerId && sellerId != user.data.id) {
+        return res
+          .status(403)
+          .json({ message: "Only you can create products for yourself." });
+      }
+      if (
+        !product?.hasVariants ||
+        (sellerId
+          ? product.sellerId !== +sellerId
+          : product.sellerId !== +user.data.id)
+      ) {
+        return res
+          .status(403)
+          .json({ message: "You don't have permission to create variant." });
+      }
+      const variant = await variantService.createVariant({
+        sellerId,
+        productId,
+        price,
+        currency,
+        sku,
+        stockQuantity,
+        name,
+        images,
+        thumbnail,
+        type,
+      });
 
-//     res.status(201).json(user);
-//   } catch (err) {
-//     next(err);
-//   }
-// };
+      res.status(201).json(variant);
+    } else {
+      return res
+        .status(403)
+        .json({ message: "You don't have permission to create variant." });
+    }
+  } catch (err) {
+    next(err);
+  }
+};

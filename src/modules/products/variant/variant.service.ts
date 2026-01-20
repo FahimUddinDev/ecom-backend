@@ -1,27 +1,60 @@
-// import { Prisma } from "@prisma/client";
-// import bcrypt from "bcrypt";
-// import { HttpError } from "../../utils/customError";
-// import * as userModel from "./user.model";
+import { Prisma } from "@prisma/client";
+import * as variantModel from "./variant.model";
 
-// export const registerUser = async ({
-//   firstName,
-//   lastName,
-//   email,
-//   password,
-//   role,
-//   avatar,
-// }: Prisma.UserCreateInput) => {
-//   const existing = await userModel.findUser({ where: { email } });
-//   if (existing) throw new HttpError("Email already exist!", 409);
-//   const hashedPassword = await bcrypt.hash(password, 10);
-//   const user = await userModel.createUser({
-//     firstName: firstName.toLowerCase(),
-//     lastName: lastName?.toLowerCase(),
-//     email,
-//     password: hashedPassword,
-//     role,
-//     status: !role || role === "user" ? "active" : "pending",
-//     avatar: avatar ? `/public/${avatar}` : null,
-//   });
-//   return { ...user, kyc: { status: "false" } };
-// };
+export const getProduct = async (productId: number) => {
+  const product = await variantModel.findProduct({
+    where: { id: +productId },
+    select: {
+      id: true,
+      hasVariants: true,
+      seller: {
+        select: {
+          id: true,
+        },
+      },
+    },
+  });
+  return {
+    hasVariants: product.hasVariants,
+    sellerId: product?.seller.id,
+  };
+};
+
+export const createVariant = async ({
+  sellerId,
+  productId,
+  price,
+  currency,
+  sku,
+  stockQuantity,
+  name,
+  images,
+  thumbnail,
+  type,
+}: {
+  sellerId: number;
+  productId: number;
+  name: string;
+  price: Prisma.Decimal;
+  currency: string;
+  sku: string | null;
+  stockQuantity: number;
+  images: string[];
+  thumbnail: string;
+  type: string;
+}) => {
+  const variant = await variantModel.createVariant({
+    product: { connect: { id: +productId } },
+    type,
+    name,
+    price,
+    currency,
+    sku,
+    stockQuantity: Number(stockQuantity),
+    images,
+    thumbnail,
+  });
+  return {
+    ...variant,
+  };
+};

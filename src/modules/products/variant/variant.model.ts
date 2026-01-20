@@ -1,9 +1,14 @@
-// // User model
-// import { Prisma, User } from "@prisma/client";
-// import { prisma } from "../../config/prisma";
+import { Prisma, Product, Variant } from "@prisma/client";
+import { prisma } from "../../../config/prisma";
 
-// export const createUser = async (
-//   data: Prisma.UserCreateInput
-// ): Promise<User> => {
-//   return prisma.user.create({ data });
-// };
+export const findProduct = async (
+  query: Prisma.ProductFindUniqueArgs,
+): Promise<Product | null> => {
+  return prisma.product.findUnique(query);
+};
+
+export const createVariant = async (
+  data: Prisma.VariantCreateInput,
+): Promise<Variant> => {
+  return prisma.variant.create({ data });
+};
