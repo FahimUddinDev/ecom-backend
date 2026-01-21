@@ -12,3 +12,29 @@ export const createVariant = async (
 ): Promise<Variant> => {
   return prisma.variant.create({ data });
 };
+
+export const updateVariant = async (
+  id: number,
+  data: Prisma.VariantUpdateInput,
+): Promise<Variant> => {
+  return prisma.variant.update({
+    where: { id: +id },
+    data,
+  });
+};
+
+export const findVariant = async (
+  query: Prisma.VariantFindUniqueArgs,
+): Promise<Variant | null> => {
+  return prisma.variant.findUnique(query);
+};
+
+export const deleteVariant = async (id: number): Promise<Variant> => {
+  return prisma.variant.delete({ where: { id } });
+};
+
+export const countOrders = async (
+  query: Prisma.OrdersCountArgs,
+): Promise<number> => {
+  return prisma.orders.count(query);
+};

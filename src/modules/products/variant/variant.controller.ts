@@ -1,4 +1,5 @@
 // User controller
+import { Prisma } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import * as variantService from "./variant.service";
 
@@ -26,12 +27,13 @@ export const createVariant = async (
     };
 
     const product = await variantService.getProduct(productId);
+    if (!product) return res.status(400).json({ message: "Product not found" });
 
     if (user.data.role === "admin" || user.data.role === "seller") {
       if (user.data.role === "seller" && sellerId && sellerId != user.data.id) {
         return res
           .status(403)
-          .json({ message: "Only you can create products for yourself." });
+          .json({ message: "Only you can create variants for yourself." });
       }
       if (
         !product?.hasVariants ||
@@ -44,7 +46,7 @@ export const createVariant = async (
           .json({ message: "You don't have permission to create variant." });
       }
       const variant = await variantService.createVariant({
-        sellerId,
+        sellerId: sellerId ? sellerId : user.data.id,
         productId,
         price,
         currency,
@@ -62,6 +64,101 @@ export const createVariant = async (
         .status(403)
         .json({ message: "You don't have permission to create variant." });
     }
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateVariant = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const {
+      sellerId,
+      productId,
+      name,
+      price,
+      currency,
+      sku,
+      stockQuantity,
+      images,
+      imagesToRemove,
+      thumbnail,
+    } = req.body;
+    const updateData = Object.fromEntries(
+      Object.entries({
+        sellerId,
+        name,
+        price,
+        productId,
+        currency,
+        sku,
+        stockQuantity,
+        images,
+        imagesToRemove,
+        thumbnail,
+      }).filter(([_, value]) => value !== undefined),
+    );
+    const { user } = req as Request & {
+      user: { data: { id: number; role: string } };
+    };
+    const product = await variantService.getProduct(productId);
+    if (!product) return res.status(400).json({ message: "Product not found" });
+
+    if (user.data.role === "admin" || user.data.role === "seller") {
+      if (user.data.role === "seller" && sellerId && sellerId != user.data.id) {
+        return res
+          .status(403)
+          .json({ message: "Only you can create products for yourself." });
+      }
+      if (
+        !product?.hasVariants ||
+        (sellerId
+          ? product.sellerId !== +sellerId
+          : product.sellerId !== +user.data.id)
+      ) {
+        return res
+          .status(403)
+          .json({ message: "You don't have permission to create variant." });
+      }
+
+      if (updateData.price !== undefined) {
+        updateData.price = new Prisma.Decimal(updateData.price);
+      }
+
+      const variant = await variantService.updateVariant(
+        +req.params.id,
+        updateData,
+      );
+
+      res.status(201).json(variant);
+    } else {
+      return res
+        .status(403)
+        .json({ message: "You don't have permission to update variant." });
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteVariant = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { user } = req as Request & {
+      user: { data: { id: number; role: string } };
+    };
+    await variantService.deleteVariant({
+      id: +req.params.id,
+      role: user.data.role,
+      authId: user.data.id,
+    });
+    res.status(204).json({ message: "Deleted variant successfully." });
   } catch (err) {
     next(err);
   }

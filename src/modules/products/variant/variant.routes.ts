@@ -18,14 +18,14 @@ router
     validate({ body: variantSchema }),
     variantController.createVariant,
   );
-// router
-//   .route("/:id")
-//   .put(
-//     authenticate,
-//     handleUpload({ images: 10, thumbnail: 1 }),
-// validate({ body: productSchema }),
-//     productsController.updateProduct,
-//   )
-//   .get(productsController.getProduct)
-//   .delete(authenticate, productsController.deleteProduct);
+router
+  .route("/:id")
+  .put(
+    authenticate,
+    handleUpload({ images: 10, thumbnail: 1 }),
+    validate({ body: variantSchema }),
+    variantController.updateVariant,
+  )
+  // .get(productsController.getProduct)
+  .delete(authenticate, variantController.deleteVariant);
 export default router;

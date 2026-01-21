@@ -29,6 +29,7 @@ model User {
   Coupon       Coupon[]
   CouponUsage  CouponUsage[]
   Address      Address[]
+  variants     Variant[]
 }
 
 model Kyc {
@@ -144,8 +145,11 @@ model Variant {
   name            String
   images          Json
   thumbnail       String
+  sellerId        Int
+  seller          User              @relation(fields: [sellerId], references: [id])
   OfferOnVariant  OfferOnVariant[]
   CouponOnVariant CouponOnVariant[]
+  orders          Orders[]
 }
 
 model Offer {
@@ -306,8 +310,10 @@ model Orders {
   pickupAddressId   Int
   deliveryAddress   Address  @relation("DeliveryAddress", fields: [deliveryAddressId], references: [id])
   pickupAddress     Address  @relation("PickupAddress", fields: [pickupAddressId], references: [id])
-  Product           Product? @relation(fields: [productId], references: [id])
+  product           Product? @relation(fields: [productId], references: [id])
   productId         Int?
+  variantId         Int?
+  variant           Variant? @relation(fields: [variantId], references: [id])
 }
 
 generator client {
