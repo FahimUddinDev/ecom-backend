@@ -38,3 +38,15 @@ export const countOrders = async (
 ): Promise<number> => {
   return prisma.orders.count(query);
 };
+
+export const findVariants = async (
+  query: Prisma.VariantFindManyArgs,
+): Promise<Variant[]> => {
+  return prisma.variant.findMany(query);
+};
+
+export const countVariants = async (
+  query: Prisma.VariantCountArgs,
+): Promise<number> => {
+  return prisma.variant.count(query);
+};

@@ -11,7 +11,7 @@ const router = Router();
 
 router
   .route("/")
-  //   .get(productsController.getProducts)
+  .get(variantController.getVariants)
   .post(
     authenticate,
     handleUpload({ images: 10, thumbnail: 1 }),
@@ -26,6 +26,6 @@ router
     validate({ body: variantSchema }),
     variantController.updateVariant,
   )
-  // .get(productsController.getProduct)
+  .get(variantController.getVariant)
   .delete(authenticate, variantController.deleteVariant);
 export default router;

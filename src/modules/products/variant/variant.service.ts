@@ -204,3 +204,117 @@ export const deleteVariant = async ({
 
   return { message: "Variant and related data deleted successfully" };
 };
+
+export const getVariant = async (query: { id: number }) => {
+  const variant = await variantModel.findVariant({
+    where: query,
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      orders: true,
+      currency: true,
+      sku: true,
+      stockQuantity: true,
+      images: true,
+      thumbnail: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  if (!variant) throw new HttpError("Variant Not found!", 404);
+  return variant;
+};
+
+export const getVariants = async (query: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sellerId?: string;
+  productId?: string;
+  priceRange?: { min?: string; max?: string };
+  inStock?: string;
+  sortBy?: string;
+  createdAt?: string | { from?: string; to?: string };
+  orderBy?: "asc" | "desc";
+}) => {
+  const page = query.page ? Number(query.page) : 1;
+  const limit = query.limit ? Number(query.limit) : 10;
+  const skip = (page - 1) * limit;
+
+  const where: any = {};
+
+  if (query.search) {
+    const keyword = query.search.trim();
+    where.OR = [{ name: { contains: keyword } }];
+  }
+  if (query.sellerId) where.sellerId = Number(query.sellerId);
+  if (query.productId) where.productId = Number(query.productId);
+  if (query.inStock === "true") {
+    where.stockQuantity = { gt: 0 };
+  }
+  if (query.priceRange) {
+    const { min, max } = query.priceRange;
+    where.price = {};
+    if (min) where.price.gte = Number(min);
+    if (max) where.price.lte = Number(max);
+  }
+
+  // createdAt filter
+  if (query.createdAt) {
+    if (typeof query.createdAt === "string") {
+      where.createdAt = { equals: new Date(query.createdAt) };
+    } else if (typeof query.createdAt === "object") {
+      where.createdAt = {};
+      if (query.createdAt.from) {
+        where.createdAt.gte = new Date(query.createdAt.from);
+      }
+      if (query.createdAt.to) {
+        where.createdAt.lte = new Date(query.createdAt.to);
+      }
+    }
+  }
+  let orderBy: any[] = [];
+
+  if (query.sortBy) {
+    const fields = query.sortBy.split(",");
+    const direction = query.orderBy === "asc" ? "asc" : "desc";
+
+    orderBy.push(
+      ...fields.map((field) => ({
+        [field]: direction,
+      })),
+    );
+  } else {
+    orderBy.push({ createdAt: "desc" });
+  }
+
+  //  Get total count before pagination
+  const total = await variantModel.countVariants({ where });
+  const variants = await variantModel.findVariants({
+    where,
+    skip,
+    take: limit,
+    orderBy,
+    select: {
+      id: true,
+      name: true,
+      soldQuantity: true,
+      orders: true,
+      price: true,
+      currency: true,
+      sku: true,
+      stockQuantity: true,
+      createdAt: true,
+      updatedAt: true,
+      images: true,
+      thumbnail: true,
+    },
+  });
+  return {
+    total,
+    page,
+    limit,
+    variants,
+  };
+};

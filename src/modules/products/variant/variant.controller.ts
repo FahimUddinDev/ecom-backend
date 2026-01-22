@@ -163,3 +163,65 @@ export const deleteVariant = async (
     next(err);
   }
 };
+
+export const getVariant = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const query = await req.params.id;
+    let variant;
+    if (parseInt(query)) {
+      variant = await variantService.getVariant({ id: +query });
+    } else {
+      res.status(422).json({ message: "Invalid query." });
+    }
+
+    res.json(variant);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getVariants = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const {
+      page,
+      limit,
+      search,
+      sellerId,
+      productId,
+      priceRange,
+      inStock,
+      sortBy,
+      createdAt,
+      orderBy,
+    } = await req.query;
+
+    const finalQuery = Object.fromEntries(
+      Object.entries({
+        page,
+        limit,
+        search,
+        sellerId,
+        productId,
+        priceRange,
+        inStock,
+        sortBy,
+        createdAt,
+        orderBy,
+      }).filter(
+        ([_, value]) => value !== undefined && value !== null && value !== "",
+      ),
+    );
+    const variants = await variantService.getVariants(finalQuery);
+    res.status(200).json(variants);
+  } catch (err) {
+    next(err);
+  }
+};
