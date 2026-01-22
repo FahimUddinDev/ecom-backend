@@ -13,6 +13,12 @@ export const createAdditionalInfo = async (
   return prisma.additionalInfo.create({ data });
 };
 
+export const createManyAdditionalInfos = (
+  data: Prisma.AdditionalInfoCreateManyInput[],
+) => {
+  return prisma.additionalInfo.createMany({ data });
+};
+
 export const updateAdditionalInfo = async (
   id: number,
   data: Prisma.AdditionalInfoUpdateInput,

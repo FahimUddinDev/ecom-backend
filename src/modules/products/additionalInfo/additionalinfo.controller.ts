@@ -48,6 +48,59 @@ export const createAdditionalInfo = async (
   }
 };
 
+export const createAdditionalInfos = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { sellerId, productId, additionalInfos } = req.body;
+
+    const { user } = req as Request & {
+      user: { data: { id: number; role: string } };
+    };
+
+    const product = await additionalInfoService.getProduct(productId);
+    if (!product) return res.status(400).json({ message: "Product not found" });
+
+    if (user.data.role === "admin" || user.data.role === "seller") {
+      if (user.data.role === "seller" && sellerId && sellerId != user.data.id) {
+        return res.status(403).json({
+          message: "Only you can create additionalInfos for yourself.",
+        });
+      }
+      if (
+        sellerId
+          ? product.sellerId !== +sellerId
+          : product.sellerId !== +user.data.id
+      ) {
+        return res.status(403).json({
+          message: "You don't have permission to create additionalInfo.",
+        });
+      }
+
+      if (!Array.isArray(additionalInfos) || additionalInfos.length === 0) {
+        return res.status(400).json({
+          message: "additionalInfos must be a non-empty array",
+        });
+      }
+
+      const result = await additionalInfoService.createAdditionalInfos({
+        productId,
+        additionalInfos,
+      });
+
+      res.status(201).json(result);
+    } else {
+      return res.status(403).json({
+        message: "You don't have permission to create additionalInfo.",
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const updateAdditionalInfo = async (
   req: Request,
   res: Response,

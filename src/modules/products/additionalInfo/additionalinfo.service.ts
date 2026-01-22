@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+import { prisma } from "../../../config/prisma";
 import { HttpError } from "../../../utils/customError";
 import * as additionalInfoModel from "./additionalinfo.model";
 
@@ -30,6 +32,30 @@ export const createAdditionalInfo = async ({
   return {
     ...additionalInfo,
   };
+};
+
+export const createAdditionalInfos = async ({
+  productId,
+  additionalInfos,
+}: {
+  productId: number;
+  additionalInfos: { name: string; value: string }[];
+}) => {
+  const infos = await prisma.$transaction(
+    async (tx: Prisma.TransactionClient) => {
+      return Promise.all(
+        additionalInfos.map((info) =>
+          tx.additionalInfo.create({
+            data: {
+              product: { connect: { id: productId } },
+              name: info.name,
+              value: info.value,
+            },
+          }),
+        ),
+      );
+    },
+  );
 };
 
 export const updateAdditionalInfo = async (
@@ -69,7 +95,7 @@ export const deleteAdditionalInfo = async ({
   authId: number;
   role: string;
 }) => {
-  const additionalInfo = await additionalInfoModel.findAdditionalInfo({
+  const additionalInfo = (await additionalInfoModel.findAdditionalInfo({
     where: { id },
     include: {
       product: {
@@ -78,10 +104,17 @@ export const deleteAdditionalInfo = async ({
         },
       },
     },
-  });
+  })) as Prisma.AdditionalInfoGetPayload<{
+    include: {
+      product: {
+        select: {
+          sellerId: true;
+        };
+      };
+    };
+  }>;
   if (!additionalInfo) throw new HttpError("AdditionalInfo not found!", 404);
 
-  console.log(additionalInfo.product.sellerId, authId, role);
   if (
     role !== "admin" &&
     !(role === "seller" && additionalInfo.product.sellerId === authId)

@@ -4,7 +4,10 @@ import { authenticate } from "../../../middlewares/auth.middleware";
 import { handleUpload } from "../../../middlewares/multer.middleware";
 import { validate } from "../../../middlewares/validate.middleware";
 import * as additionalInfoController from "./additionalinfo.controller";
-import { additionalInfoSchema } from "./additionalInfo.validator";
+import {
+  additionalInfoSchema,
+  bulkAdditionalInfoSchema,
+} from "./additionalInfo.validator";
 
 const router = Router();
 
@@ -15,6 +18,11 @@ router
     authenticate,
     validate({ body: additionalInfoSchema }),
     additionalInfoController.createAdditionalInfo,
+  )
+  .patch(
+    authenticate,
+    validate({ body: bulkAdditionalInfoSchema }),
+    additionalInfoController.createAdditionalInfos,
   );
 router
   .route("/:id")
