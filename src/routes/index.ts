@@ -5,6 +5,7 @@ import authRouter from "../modules/auth/auth.routes";
 import categoriesRoutes from "../modules/category/category.routes";
 import childCategoriesRoutes from "../modules/childCategory/childCategory.routes";
 import emailTemplateRoutes from "../modules/emailTemplate/emailTemplate.routes";
+import additionalInfoRoutes from "../modules/products/additionalInfo/additionalinfo.routes";
 import productsRoutes from "../modules/products/products.routes";
 import variantRoutes from "../modules/products/variant/variant.routes";
 import smtpRoutes from "../modules/smtp/smtp.routes";
@@ -24,5 +25,6 @@ router.use("/child-categories", childCategoriesRoutes);
 router.use("/address", addressRoutes);
 router.use("/products", productsRoutes);
 router.use("/variants", variantRoutes);
+router.use("/additional-info", additionalInfoRoutes);
 
 export default router;
