@@ -6,6 +6,12 @@ enum Status {
   draft
 }
 
+enum OfferType {
+  all
+  product
+  variant
+}
+
 enum DiscountType {
   percentage
   fixed
@@ -156,6 +162,8 @@ model Variant {
 
 model Offer {
   id            Int          @id @default(autoincrement())
+  sellerId      Int?
+  offerType     OfferType
   name          String
   description   String?
   discountType  DiscountType
@@ -164,6 +172,7 @@ model Offer {
   endDate       DateTime?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+  status        Status       @default(active)
 
   // relations
   products OfferOnProduct[]

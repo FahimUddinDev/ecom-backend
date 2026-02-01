@@ -1,7 +1,6 @@
 import { Router } from "express";
 
 import { authenticate } from "../../../middlewares/auth.middleware";
-import { handleUpload } from "../../../middlewares/multer.middleware";
 import { validate } from "../../../middlewares/validate.middleware";
 import * as additionalInfoController from "./additionalinfo.controller";
 import {
@@ -28,7 +27,6 @@ router
   .route("/:id")
   .put(
     authenticate,
-    handleUpload({ images: 10, thumbnail: 1 }),
     validate({ body: additionalInfoSchema }),
     additionalInfoController.updateAdditionalInfo,
   )
