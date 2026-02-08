@@ -174,19 +174,17 @@ model Offer {
   updatedAt     DateTime     @updatedAt
   status        Status       @default(active)
 
-  // relations
   products OfferOnProduct[]
   variants OfferOnVariant[]
 }
 
 model OfferOnProduct {
-  // join table
   offer     Offer   @relation(fields: [offerId], references: [id])
   offerId   Int
   product   Product @relation(fields: [productId], references: [id])
   productId Int
 
-  @@id([offerId, productId]) // composite primary key
+  @@id([offerId, productId])
 }
 
 model OfferOnVariant {
@@ -240,7 +238,7 @@ model CouponUsage {
   userId   Int
   usedAt   DateTime @default(now())
 
-  @@unique([couponId, userId]) // ensures one usage per user per coupon
+  @@unique([couponId, userId])
 }
 
 model CouponOnProduct {

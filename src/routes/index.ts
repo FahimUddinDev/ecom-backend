@@ -6,6 +6,7 @@ import categoriesRoutes from "../modules/category/category.routes";
 import childCategoriesRoutes from "../modules/childCategory/childCategory.routes";
 import emailTemplateRoutes from "../modules/emailTemplate/emailTemplate.routes";
 import offersRoute from "../modules/offer/offer.routes";
+import offerOnProductRoute from "../modules/offer/offerOnProduct/offerOnProduct.routes";
 import additionalInfoRoutes from "../modules/products/additionalInfo/additionalinfo.routes";
 import productsRoutes from "../modules/products/products.routes";
 import variantRoutes from "../modules/products/variant/variant.routes";
@@ -28,5 +29,6 @@ router.use("/products", productsRoutes);
 router.use("/variants", variantRoutes);
 router.use("/additional-info", additionalInfoRoutes);
 router.use("/offers", offersRoute);
+router.use("/offer-on-product", offerOnProductRoute);
 
 export default router;
