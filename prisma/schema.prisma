@@ -329,6 +329,28 @@ model BlogCategory {
   @@index([status])
 }
 
+model BlogTag {
+  id        Int           @id @default(autoincrement())
+  name      String        @unique
+  slug      String        @unique
+  status    Status        @default(active)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  posts     BlogPostTag[]
+
+  @@index([status])
+}
+
+model BlogPostTag {
+  postId Int
+  post   BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tagId  Int
+  tag    BlogTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@index([tagId])
+}
+
 model BlogPost {
   id             Int           @id @default(autoincrement())
   thumbnail      String
@@ -346,6 +368,7 @@ model BlogPost {
   authorId       Int
   author         User          @relation("BlogPostAuthor", fields: [authorId], references: [id])
   comments       BlogComment[]
+  tags           BlogPostTag[]
 
   @@index([status, createdAt])
   @@index([categoryId])
@@ -360,7 +383,7 @@ model BlogComment {
   parentId    Int?
   parent      BlogComment?  @relation("BlogCommentReplies", fields: [parentId], references: [id])
   replies     BlogComment[] @relation("BlogCommentReplies")
-  content     String        @db.text
+  content     String        @db.Text
   isHidden    Boolean       @default(false)
   deletedAt   DateTime?
   deletedById Int?

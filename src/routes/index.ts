@@ -10,6 +10,9 @@ import smtpRoutes from "../modules/smtp/smtp.routes";
 import subCategoriesRoutes from "../modules/subCategory/subCategory.routes";
 import userRoutes from "../modules/user/user.routes";
 import verificationRoutes from "../modules/verification/verification.routes";
+import blogRoutes from "../modules/blog/blog.routes";
+import blogCategoryRoutes from "../modules/blogCategory/blogCategory.routes";
+import blogCommentRoutes from "../modules/blogComment/blogComment.routes";
 
 const router = Router();
 router.use("/auth", authRouter);
@@ -22,5 +25,8 @@ router.use("/sub-categories", subCategoriesRoutes);
 router.use("/child-categories", childCategoriesRoutes);
 router.use("/address", addressRoutes);
 router.use("/products", productsRoutes);
+router.use("/blogs", blogRoutes)
+router.use("/blog-categories", blogCategoryRoutes)
+router.use("/blog-comments", blogCommentRoutes)
 
 export default router;
