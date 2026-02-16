@@ -1,4 +1,4 @@
-import { Offer, Prisma, Product } from "@prisma/client";
+import { Coupon, Prisma, Product } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 
 export const findProduct = async (
@@ -7,21 +7,23 @@ export const findProduct = async (
   return prisma.product.findUnique(query);
 };
 
-export const createOffer = async (data: {
-  name: string;
-  sellerId?: number;
-  offerType: Prisma.OfferCreateInput["offerType"];
+export const createCoupon = async (data: {
+  code: string;
+  referralCode?: string;
+  description?: string;
   discountType: Prisma.OfferCreateInput["discountType"];
-  status?: Prisma.OfferCreateInput["status"];
   discountValue: number;
+  usageLimit?: number;
+  usedCount?: number;
   startDate: Date;
   endDate?: Date;
   productIds?: number[];
   variantIds?: number[];
-}): Promise<Offer> => {
+  sellerId?: number;
+}): Promise<Coupon> => {
   const { productIds = [], variantIds = [], discountValue, ...rest } = data;
 
-  const prismaData: Prisma.OfferCreateInput = {
+  const prismaData: Prisma.CouponCreateInput = {
     ...rest,
     discountValue: new Prisma.Decimal(discountValue),
 
@@ -44,7 +46,7 @@ export const createOffer = async (data: {
         : undefined,
   };
 
-  return prisma.offer.create({
+  return prisma.coupon.create({
     data: prismaData,
     include: {
       products: true,
@@ -53,114 +55,114 @@ export const createOffer = async (data: {
   });
 };
 
-export const updateOffer = async (
-  id: number,
-  data: Prisma.OfferUpdateInput & {
-    productIds?: number[];
-    variantIds?: number[];
-  },
-): Promise<Offer> => {
-  const { productIds, variantIds, ...rest } = data;
+// export const updateOffer = async (
+//   id: number,
+//   data: Prisma.OfferUpdateInput & {
+//     productIds?: number[];
+//     variantIds?: number[];
+//   },
+// ): Promise<Offer> => {
+//   const { productIds, variantIds, ...rest } = data;
 
-  return prisma.offer.update({
-    where: { id },
+//   return prisma.offer.update({
+//     where: { id },
 
-    data: {
-      ...rest,
+//     data: {
+//       ...rest,
 
-      // ===== Product Relation Update =====
-      products: productIds
-        ? {
-            deleteMany: {}, // আগের সব relation delete
-            create: productIds.map((productId) => ({
-              product: {
-                connect: { id: productId },
-              },
-            })),
-          }
-        : undefined,
+//       // ===== Product Relation Update =====
+//       products: productIds
+//         ? {
+//             deleteMany: {}, // আগের সব relation delete
+//             create: productIds.map((productId) => ({
+//               product: {
+//                 connect: { id: productId },
+//               },
+//             })),
+//           }
+//         : undefined,
 
-      // ===== Variant Relation Update =====
-      variants: variantIds
-        ? {
-            deleteMany: {},
-            create: variantIds.map((variantId) => ({
-              variant: {
-                connect: { id: variantId },
-              },
-            })),
-          }
-        : undefined,
-    },
+//       // ===== Variant Relation Update =====
+//       variants: variantIds
+//         ? {
+//             deleteMany: {},
+//             create: variantIds.map((variantId) => ({
+//               variant: {
+//                 connect: { id: variantId },
+//               },
+//             })),
+//           }
+//         : undefined,
+//     },
 
-    include: {
-      products: true,
-      variants: true,
-    },
-  });
-};
+//     include: {
+//       products: true,
+//       variants: true,
+//     },
+//   });
+// };
 
-export const findOffer = async (query: Prisma.OfferFindUniqueArgs) => {
-  return prisma.offer.findUnique({
-    ...query,
-  });
-};
+// export const findOffer = async (query: Prisma.OfferFindUniqueArgs) => {
+//   return prisma.offer.findUnique({
+//     ...query,
+//   });
+// };
 
-export const deleteOffer = async (id: number): Promise<Offer> => {
-  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    // ===== Delete related products =====
-    await tx.offerOnProduct.deleteMany({
-      where: {
-        offerId: id,
-      },
-    });
+// export const deleteOffer = async (id: number): Promise<Offer> => {
+//   return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+//     // ===== Delete related products =====
+//     await tx.offerOnProduct.deleteMany({
+//       where: {
+//         offerId: id,
+//       },
+//     });
 
-    // ===== Delete related variants =====
-    await tx.offerOnVariant.deleteMany({
-      where: {
-        offerId: id,
-      },
-    });
+//     // ===== Delete related variants =====
+//     await tx.offerOnVariant.deleteMany({
+//       where: {
+//         offerId: id,
+//       },
+//     });
 
-    // ===== Finally delete offer =====
-    return tx.offer.delete({
-      where: { id },
-    });
-  });
-};
+//     // ===== Finally delete offer =====
+//     return tx.offer.delete({
+//       where: { id },
+//     });
+//   });
+// };
 
-export const findOffers = async (
-  query: Prisma.OfferFindManyArgs,
-): Promise<Offer[]> => {
-  return prisma.offer.findMany({
-    ...query,
-    include: {
-      products: {
-        include: {
-          product: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-      variants: {
-        include: {
-          variant: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-    },
-  });
-};
+// export const findOffers = async (
+//   query: Prisma.OfferFindManyArgs,
+// ): Promise<Offer[]> => {
+//   return prisma.offer.findMany({
+//     ...query,
+//     include: {
+//       products: {
+//         include: {
+//           product: {
+//             select: {
+//               id: true,
+//               name: true,
+//             },
+//           },
+//         },
+//       },
+//       variants: {
+//         include: {
+//           variant: {
+//             select: {
+//               id: true,
+//               name: true,
+//             },
+//           },
+//         },
+//       },
+//     },
+//   });
+// };
 
-export const countOffers = async (
-  query: Prisma.OfferCountArgs,
-): Promise<number> => {
-  return prisma.offer.count(query);
-};
+// export const countOffers = async (
+//   query: Prisma.OfferCountArgs,
+// ): Promise<number> => {
+//   return prisma.offer.count(query);
+// };

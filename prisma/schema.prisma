@@ -198,27 +198,24 @@ model OfferOnVariant {
 }
 
 model Coupon {
-  id            Int          @id @default(autoincrement())
-  code          String       @unique
-  referralCode  String?      @unique
-  description   String?
-  discountType  DiscountType
-  discountValue Decimal      @db.Decimal(10, 2)
-  usageLimit    Int? // optional: how many times coupon can be used
-  usedCount     Int          @default(0)
-  startDate     DateTime
-  endDate       DateTime?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-
-  // relations
+  id             Int               @id @default(autoincrement())
+  code           String            @unique
+  referralCode   String?           @unique
+  description    String?
+  discountType   DiscountType
+  discountValue  Decimal           @db.Decimal(10, 2)
+  usageLimit     Int?              @default(1)
+  usedCount      Int               @default(0)
+  startDate      DateTime
+  endDate        DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
   products       CouponOnProduct[]
   variants       CouponOnVariant[]
   sellers        User?             @relation(fields: [sellerId], references: [id])
   sellerId       Int?
   CouponReferral CouponReferral[]
   CouponUsage    CouponUsage[]
-  Categories     Categories[]
 }
 
 model CouponReferral {
@@ -263,8 +260,6 @@ model Categories {
   id            Int             @id @default(autoincrement())
   name          String          @unique
   thumbnail     String?
-  Coupon        Coupon?         @relation(fields: [couponId], references: [id])
-  couponId      Int?
   subCategories SubCategories[]
   Products      Product[]
 }

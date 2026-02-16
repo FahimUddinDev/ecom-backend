@@ -1,23 +1,24 @@
 import { NextFunction, Request, Response } from "express";
-import * as offerService from "./offer.service";
+import * as couponService from "./coupon.service";
 
-export const createOffer = async (
+export const createCoupon = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
     const {
-      name,
-      sellerId,
-      offerType,
+      code,
+      referralCode,
+      description,
       discountType,
-      status,
       discountValue,
+      usageLimit,
       startDate,
       endDate,
       productIds,
       variantIds,
+      sellerId,
     } = req.body;
 
     const { user } = req as Request & {
@@ -27,7 +28,7 @@ export const createOffer = async (
     //  Unauthorized role
     if (!["admin", "seller"].includes(user.data.role)) {
       return res.status(403).json({
-        message: "You don't have permission to create offer.",
+        message: "You don't have permission to create coupon.",
       });
     }
 
@@ -46,181 +47,172 @@ export const createOffer = async (
       finalSellerId = sellerId;
     }
 
-    const offer = await offerService.createOffer({
-      name,
+    const coupon = await couponService.createCoupon({
+      code,
+      referralCode,
+      description,
+      discountType,
+      discountValue,
+      startDate,
+      endDate,
+      productIds,
+      variantIds,
       sellerId: finalSellerId,
-      offerType,
-      discountType,
-      status,
-      discountValue,
-      startDate,
-      endDate,
-      productIds,
-      variantIds,
+      usageLimit,
     });
 
-    return res.status(201).json(offer);
+    return res.status(201).json(coupon);
   } catch (err) {
     next(err);
   }
 };
 
-export const updateOffer = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const {
-      name,
-      sellerId,
-      offerType,
-      discountType,
-      status,
-      discountValue,
-      startDate,
-      endDate,
-      productIds,
-      variantIds,
-    } = req.body;
+// export const updateCoupon = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const {
+//       name,
+//       sellerId,
+//       offerType,
+//       discountType,
+//       status,
+//       discountValue,
+//       startDate,
+//       endDate,
+//       productIds,
+//       variantIds,
+//     } = req.body;
 
-    // ---------- Build Partial Update Data ----------
-    const updateData = Object.fromEntries(
-      Object.entries({
-        name,
-        sellerId,
-        offerType,
-        discountType,
-        status,
-        discountValue,
-        startDate,
-        endDate,
-        productIds,
-        variantIds,
-      }).filter(([_, value]) => value !== undefined),
-    );
+//     const updateData = Object.fromEntries(
+//       Object.entries({
+//         name,
+//         sellerId,
+//         offerType,
+//         discountType,
+//         status,
+//         discountValue,
+//         startDate,
+//         endDate,
+//         productIds,
+//         variantIds,
+//       }).filter(([_, value]) => value !== undefined),
+//     );
 
-    // ---------- User from Auth Middleware ----------
-    const { user } = req as Request & {
-      user: { data: { id: number; role: "admin" | "seller" } };
-    };
+//     const { user } = req as Request & {
+//       user: { data: { id: number; role: "admin" | "seller" } };
+//     };
 
-    // ---------- Get Existing Offer ----------
-    const offer = await offerService.getOffer({ id: +req.params.id });
+//     const offer = await offerService.getOffer({ id: +req.params.id });
 
-    if (!offer) {
-      return res.status(404).json({
-        message: "Offer not found",
-      });
-    }
+//     if (!offer) {
+//       return res.status(404).json({
+//         message: "Offer not found",
+//       });
+//     }
 
-    // ---------- Permission Check ----------
-    if (!["admin", "seller"].includes(user.data.role)) {
-      return res.status(403).json({
-        message: "You don't have permission to update offer.",
-      });
-    }
+//     if (!["admin", "seller"].includes(user.data.role)) {
+//       return res.status(403).json({
+//         message: "You don't have permission to update offer.",
+//       });
+//     }
 
-    // ---------- Seller Specific Logic ----------
-    if (user.data.role === "seller") {
-      // Seller cannot change to another seller
-      if (sellerId && Number(sellerId) !== user.data.id) {
-        return res.status(403).json({
-          message: "Only you can update offers for yourself.",
-        });
-      }
+//     if (user.data.role === "seller") {
+//       if (sellerId && Number(sellerId) !== user.data.id) {
+//         return res.status(403).json({
+//           message: "Only you can update offers for yourself.",
+//         });
+//       }
 
-      // Seller must own this offer
-      if (offer.sellerId !== user.data.id) {
-        return res.status(403).json({
-          message: "You don't own this offer.",
-        });
-      }
-    }
+//       if (offer.sellerId !== user.data.id) {
+//         return res.status(403).json({
+//           message: "You don't own this offer.",
+//         });
+//       }
+//     }
 
-    // ---------- Admin Logic ----------
-    if (user.data.role === "admin") {
-      // Admin can update any offer
-      updateData.sellerId = sellerId ?? offer.sellerId;
-    }
+//     if (user.data.role === "admin") {
+//       updateData.sellerId = sellerId ?? offer.sellerId;
+//     }
 
-    // ---------- Update Offer ----------
-    const updatedOffer = await offerService.updateOffer(
-      +req.params.id,
-      updateData,
-    );
+//     const updatedOffer = await offerService.updateOffer(
+//       +req.params.id,
+//       updateData,
+//     );
 
-    return res.status(200).json(updatedOffer);
-  } catch (err) {
-    next(err);
-  }
-};
+//     return res.status(200).json(updatedOffer);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
-export const deleteOffer = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const { user } = req as Request & {
-      user: { data: { id: number; role: string } };
-    };
-    await offerService.deleteOffer({
-      id: +req.params.id,
-      role: user.data.role,
-      authId: user.data.id,
-    });
-    res.status(204).json({ message: "Deleted offer successfully." });
-  } catch (err) {
-    next(err);
-  }
-};
+// export const deleteOffer = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const { user } = req as Request & {
+//       user: { data: { id: number; role: string } };
+//     };
+//     await offerService.deleteOffer({
+//       id: +req.params.id,
+//       role: user.data.role,
+//       authId: user.data.id,
+//     });
+//     res.status(204).json({ message: "Deleted offer successfully." });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
-export const getOffer = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const id = Number(req.params.id);
+// export const getOffer = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const id = Number(req.params.id);
 
-    if (!id || isNaN(id)) {
-      return res.status(422).json({
-        message: "Invalid offer id.",
-      });
-    }
+//     if (!id || isNaN(id)) {
+//       return res.status(422).json({
+//         message: "Invalid offer id.",
+//       });
+//     }
 
-    const offer = await offerService.getOffer({
-      id,
-    });
+//     const offer = await offerService.getOffer({
+//       id,
+//     });
 
-    return res.json(offer);
-  } catch (err) {
-    next(err);
-  }
-};
+//     return res.json(offer);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
-export const getOffers = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const { page, limit, search, sellerId } = await req.query;
+// export const getOffers = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const { page, limit, search, sellerId } = await req.query;
 
-    const finalQuery = Object.fromEntries(
-      Object.entries({
-        page,
-        limit,
-        search,
-        sellerId,
-      }).filter(
-        ([_, value]) => value !== undefined && value !== null && value !== "",
-      ),
-    );
-    const offers = await offerService.getOffers(finalQuery);
-    res.status(200).json(offers);
-  } catch (err) {
-    next(err);
-  }
-};
+//     const finalQuery = Object.fromEntries(
+//       Object.entries({
+//         page,
+//         limit,
+//         search,
+//         sellerId,
+//       }).filter(
+//         ([_, value]) => value !== undefined && value !== null && value !== "",
+//       ),
+//     );
+//     const offers = await offerService.getOffers(finalQuery);
+//     res.status(200).json(offers);
+//   } catch (err) {
+//     next(err);
+//   }
+// };

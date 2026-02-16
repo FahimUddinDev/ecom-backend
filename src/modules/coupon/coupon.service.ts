@@ -1,9 +1,8 @@
-import { DiscountType, OfferType, Prisma, Status } from "@prisma/client";
-import { HttpError } from "../../utils/customError";
-import * as offerModel from "./offer.model";
+import { DiscountType } from "@prisma/client";
+import * as couponModel from "./coupon.model";
 
 export const getProduct = async (productId: number) => {
-  const product = await offerModel.findProduct({
+  const product = await couponModel.findProduct({
     where: { id: +productId },
     select: {
       id: true,
@@ -14,202 +13,205 @@ export const getProduct = async (productId: number) => {
   return product;
 };
 
-export const createOffer = async ({
-  name,
-  sellerId,
-  offerType,
+export const createCoupon = async ({
+  code,
+  referralCode,
+  description,
   discountType,
-  status,
   discountValue,
   startDate,
   endDate,
   productIds = [],
   variantIds = [],
+  sellerId,
+  usageLimit,
 }: {
   sellerId?: number;
-  name: string;
-  offerType: OfferType;
+  code: string;
+  referralCode: string;
+  description: string;
   discountType: DiscountType;
-  status?: Status;
   discountValue: number;
   startDate: string;
   endDate?: string;
   productIds?: number[];
   variantIds?: number[];
+  usageLimit: number;
 }) => {
-  return offerModel.createOffer({
-    name,
-    sellerId,
-    offerType,
+  return couponModel.createCoupon({
+    code,
+    referralCode,
+    description,
     discountType,
-    status,
     discountValue,
     startDate: new Date(startDate),
     endDate: endDate ? new Date(endDate) : undefined,
     productIds,
     variantIds,
+    sellerId,
+    usageLimit,
   });
 };
 
-export const updateOffer = async (
-  id: number,
-  data: Partial<{
-    sellerId?: number;
-    name: string;
-    offerType: OfferType;
-    discountType: DiscountType;
-    status?: Status;
-    discountValue: number;
-    startDate: string;
-    endDate: string;
-    productIds?: number[];
-    variantIds?: number[];
-  }>,
-) => {
-  const existingOffer = await offerModel.findOffer({
-    where: { id },
-  });
+// export const updateCoupon = async (
+//   id: number,
+//   data: Partial<{
+//     sellerId?: number;
+//     code: string;
+//     referralCode: string;
+//     description: string;
+//     discountType: DiscountType;
+//     discountValue: number;
+//     startDate: string;
+//     endDate: string;
+//     productIds?: number[];
+//     variantIds?: number[];
+//   }>,
+// ) => {
+//   const existingOffer = await offerModel.findOffer({
+//     where: { id },
+//   });
 
-  if (!existingOffer) throw new Error("Offer not found");
+//   if (!existingOffer) throw new Error("Offer not found");
 
-  return offerModel.updateOffer(id, {
-    ...data,
+//   return offerModel.updateOffer(id, {
+//     ...data,
 
-    ...(data.startDate && {
-      startDate: new Date(data.startDate),
-    }),
+//     ...(data.startDate && {
+//       startDate: new Date(data.startDate),
+//     }),
 
-    ...(data.endDate && {
-      endDate: new Date(data.endDate),
-    }),
-  });
-};
+//     ...(data.endDate && {
+//       endDate: new Date(data.endDate),
+//     }),
+//   });
+// };
 
-export const deleteOffer = async ({
-  id,
-  role,
-  authId,
-}: {
-  id: number;
-  authId: number;
-  role: string;
-}) => {
-  const offer = await offerModel.findOffer({
-    where: { id },
-    select: { sellerId: true },
-  });
+// export const deleteOffer = async ({
+//   id,
+//   role,
+//   authId,
+// }: {
+//   id: number;
+//   authId: number;
+//   role: string;
+// }) => {
+//   const offer = await offerModel.findOffer({
+//     where: { id },
+//     select: { sellerId: true },
+//   });
 
-  if (!offer) {
-    throw new HttpError("Offer not found!", 404);
-  }
+//   if (!offer) {
+//     throw new HttpError("Offer not found!", 404);
+//   }
 
-  const isAdmin = role === "admin";
-  const isSellerOwner = role === "seller" && offer.sellerId === authId;
+//   const isAdmin = role === "admin";
+//   const isSellerOwner = role === "seller" && offer.sellerId === authId;
 
-  if (!isAdmin && !isSellerOwner) {
-    throw new HttpError("Permission denied!", 403);
-  }
+//   if (!isAdmin && !isSellerOwner) {
+//     throw new HttpError("Permission denied!", 403);
+//   }
 
-  await offerModel.deleteOffer(id);
+//   await offerModel.deleteOffer(id);
 
-  return { message: "Offer deleted successfully" };
-};
+//   return { message: "Offer deleted successfully" };
+// };
 
-export const getOffer = async (query: { id: number }) => {
-  const offer = await offerModel.findOffer({
-    where: {
-      id: query.id,
-    },
-    include: {
-      products: {
-        include: {
-          product: true,
-        },
-      },
+// export const getOffer = async (query: { id: number }) => {
+//   const offer = await offerModel.findOffer({
+//     where: {
+//       id: query.id,
+//     },
+//     include: {
+//       products: {
+//         include: {
+//           product: true,
+//         },
+//       },
 
-      variants: {
-        include: {
-          variant: true,
-        },
-      },
-    },
-  });
+//       variants: {
+//         include: {
+//           variant: true,
+//         },
+//       },
+//     },
+//   });
 
-  if (!offer) {
-    throw new HttpError("Offer Not found!", 404);
-  }
+//   if (!offer) {
+//     throw new HttpError("Offer Not found!", 404);
+//   }
 
-  return offer;
-};
+//   return offer;
+// };
 
-export const getOffers = async (query: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  sellerId?: string | number;
-  sortBy?: string;
-  orderBy?: "asc" | "desc";
-  createdAt?: string | { from?: string; to?: string };
-  startDate?: string | { from?: string; to?: string };
-  endDate?: string | { from?: string; to?: string };
-}) => {
-  const page = query.page ? Number(query.page) : 1;
-  const limit = query.limit ? Number(query.limit) : 10;
-  const skip = (page - 1) * limit;
+// export const getOffers = async (query: {
+//   page?: number;
+//   limit?: number;
+//   search?: string;
+//   sellerId?: string | number;
+//   sortBy?: string;
+//   orderBy?: "asc" | "desc";
+//   createdAt?: string | { from?: string; to?: string };
+//   startDate?: string | { from?: string; to?: string };
+//   endDate?: string | { from?: string; to?: string };
+// }) => {
+//   const page = query.page ? Number(query.page) : 1;
+//   const limit = query.limit ? Number(query.limit) : 10;
+//   const skip = (page - 1) * limit;
 
-  const where: Prisma.OfferWhereInput = {};
+//   const where: Prisma.OfferWhereInput = {};
 
-  // Search by name (MySQL safe)
-  if (query.search) {
-    const keyword = query.search.trim();
-    where.OR = [{ name: { contains: keyword } }];
-  }
+//   // Search by name (MySQL safe)
+//   if (query.search) {
+//     const keyword = query.search.trim();
+//     where.OR = [{ name: { contains: keyword } }];
+//   }
 
-  // Seller filter
-  if (query.sellerId) {
-    where.sellerId = Number(query.sellerId);
-  }
+//   // Seller filter
+//   if (query.sellerId) {
+//     where.sellerId = Number(query.sellerId);
+//   }
 
-  // Date filter helper
-  const buildDateFilter = (input: any) => {
-    if (typeof input === "string") return { equals: new Date(input) };
-    if (typeof input === "object") {
-      const range: any = {};
-      if (input.from) range.gte = new Date(input.from);
-      if (input.to) range.lte = new Date(input.to);
-      return range;
-    }
-  };
+//   // Date filter helper
+//   const buildDateFilter = (input: any) => {
+//     if (typeof input === "string") return { equals: new Date(input) };
+//     if (typeof input === "object") {
+//       const range: any = {};
+//       if (input.from) range.gte = new Date(input.from);
+//       if (input.to) range.lte = new Date(input.to);
+//       return range;
+//     }
+//   };
 
-  if (query.createdAt) where.createdAt = buildDateFilter(query.createdAt);
-  if (query.startDate) where.startDate = buildDateFilter(query.startDate);
-  if (query.endDate) where.endDate = buildDateFilter(query.endDate);
+//   if (query.createdAt) where.createdAt = buildDateFilter(query.createdAt);
+//   if (query.startDate) where.startDate = buildDateFilter(query.startDate);
+//   if (query.endDate) where.endDate = buildDateFilter(query.endDate);
 
-  // Sorting
-  const orderBy: Prisma.OfferOrderByWithRelationInput[] = [];
-  if (query.sortBy) {
-    const fields = query.sortBy.split(",");
-    const direction = query.orderBy === "asc" ? "asc" : "desc";
-    fields.forEach((field) => orderBy.push({ [field]: direction } as any));
-  } else {
-    orderBy.push({ createdAt: "desc" });
-  }
+//   // Sorting
+//   const orderBy: Prisma.OfferOrderByWithRelationInput[] = [];
+//   if (query.sortBy) {
+//     const fields = query.sortBy.split(",");
+//     const direction = query.orderBy === "asc" ? "asc" : "desc";
+//     fields.forEach((field) => orderBy.push({ [field]: direction } as any));
+//   } else {
+//     orderBy.push({ createdAt: "desc" });
+//   }
 
-  // Total count
-  const total = await offerModel.countOffers({ where });
+//   // Total count
+//   const total = await offerModel.countOffers({ where });
 
-  // Fetch offers with products & variants
-  const offers = await offerModel.findOffers({
-    where,
-    skip,
-    take: limit,
-    orderBy,
-  });
+//   // Fetch offers with products & variants
+//   const offers = await offerModel.findOffers({
+//     where,
+//     skip,
+//     take: limit,
+//     orderBy,
+//   });
 
-  return {
-    total,
-    page,
-    limit,
-    offers,
-  };
-};
+//   return {
+//     total,
+//     page,
+//     limit,
+//     offers,
+//   };
+// };
