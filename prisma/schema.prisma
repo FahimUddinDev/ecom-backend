@@ -18,24 +18,25 @@ enum DiscountType {
 }
 
 model User {
-  id           Int            @id @default(autoincrement())
-  firstName    String
-  lastName     String?
-  email        String         @unique
-  password     String
-  createdAt    DateTime       @default(now())
-  role         String         @default("user")
-  status       String         @default("pending") // e.g., active, inActive
-  verified     Boolean        @default(false)
-  avatar       String?
-  verification Verification[]
-  kyc          Kyc?
-  reviews      Review[]
-  products     Product[]
-  Coupon       Coupon[]
-  CouponUsage  CouponUsage[]
-  Address      Address[]
-  variants     Variant[]
+  id              Int              @id @default(autoincrement())
+  firstName       String
+  lastName        String?
+  email           String           @unique
+  password        String
+  createdAt       DateTime         @default(now())
+  role            String           @default("user")
+  status          String           @default("pending") // e.g., active, inActive
+  verified        Boolean          @default(false)
+  avatar          String?
+  verification    Verification[]
+  kyc             Kyc?
+  reviews         Review[]
+  products        Product[]
+  Coupon          Coupon[]
+  CouponUsage     CouponUsage[]
+  Address         Address[]
+  variants        Variant[]
+  couponReferrals CouponReferral[]
 }
 
 model Kyc {
@@ -198,7 +199,7 @@ model OfferOnVariant {
 }
 
 model Coupon {
-  id             Int               @id @default(autoincrement())
+  id             Int               @id @unique @default(autoincrement())
   code           String            @unique
   referralCode   String?           @unique
   description    String?
@@ -223,12 +224,13 @@ model CouponReferral {
   coupon    Coupon   @relation(fields: [couponId], references: [id])
   couponId  Int
   ipAddress String?
-  userId    Int? // if they sign up
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
 }
 
 model CouponUsage {
-  id       Int      @id @default(autoincrement())
+  id       Int      @id @unique @default(autoincrement())
   coupon   Coupon   @relation(fields: [couponId], references: [id])
   couponId Int
   user     User     @relation(fields: [userId], references: [id])

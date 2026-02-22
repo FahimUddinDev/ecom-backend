@@ -24,3 +24,14 @@ export const couponSchema = yup.object({
   variantIds: yup.array().of(yup.number()),
   sellerId: yup.number(),
 });
+
+export const couponReferralSchema = yup.object({
+  couponId: yup.string().required("Coupon ID is required"),
+  ipAddress: yup.string().optional(),
+  userId: yup.number().optional(),
+});
+
+export const couponUsageSchema = yup.object({
+  couponId: yup.number().required("coupon id is required"),
+  userId: yup.number().required("user id is required"),
+});
