@@ -2,6 +2,7 @@
 import { Router } from "express";
 import addressRoutes from "../modules/address/address.routes";
 import authRouter from "../modules/auth/auth.routes";
+import cartRoute from "../modules/cart/cart.routes";
 import categoriesRoutes from "../modules/category/category.routes";
 import childCategoriesRoutes from "../modules/childCategory/childCategory.routes";
 import couponRoute from "../modules/coupon/coupon.routes";
@@ -14,6 +15,7 @@ import smtpRoutes from "../modules/smtp/smtp.routes";
 import subCategoriesRoutes from "../modules/subCategory/subCategory.routes";
 import userRoutes from "../modules/user/user.routes";
 import verificationRoutes from "../modules/verification/verification.routes";
+import wishlistRoute from "../modules/wishlist/wishlist.routes";
 
 const router = Router();
 router.use("/auth", authRouter);
@@ -30,6 +32,8 @@ router.use("/variants", variantRoutes);
 router.use("/additional-info", additionalInfoRoutes);
 router.use("/offers", offersRoute);
 router.use("/coupons", couponRoute);
+router.use("/wishlist", wishlistRoute);
+router.use("/cart", cartRoute);
 // router.use("/offer-on-product", offerOnProductRoute);
 
 export default router;
