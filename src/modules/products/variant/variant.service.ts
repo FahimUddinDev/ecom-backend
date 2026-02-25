@@ -166,8 +166,8 @@ export const deleteVariant = async ({
   const variant = await variantModel.findVariant({ where: { id } });
   if (!variant) throw new HttpError("Variant not found!", 404);
 
-  const activeOrderCount = await variantModel.countOrders({
-    where: { variantId: id, status: "active" },
+  const activeOrderCount = await prisma.orderItem.count({
+    where: { variantId: id, order: { status: "pending" } },
   });
 
   if (activeOrderCount > 0) {
@@ -177,7 +177,7 @@ export const deleteVariant = async ({
     );
   }
 
-  const orderCount = await variantModel.countOrders({
+  const orderCount = await prisma.orderItem.count({
     where: { variantId: id },
   });
 
@@ -212,7 +212,7 @@ export const getVariant = async (query: { id: number }) => {
       id: true,
       name: true,
       price: true,
-      orders: true,
+      orderItems: true,
       currency: true,
       sku: true,
       stockQuantity: true,
@@ -300,7 +300,7 @@ export const getVariants = async (query: {
       id: true,
       name: true,
       soldQuantity: true,
-      orders: true,
+      orderItems: true,
       price: true,
       currency: true,
       sku: true,

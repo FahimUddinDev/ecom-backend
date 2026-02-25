@@ -8,6 +8,7 @@ import childCategoriesRoutes from "../modules/childCategory/childCategory.routes
 import couponRoute from "../modules/coupon/coupon.routes";
 import emailTemplateRoutes from "../modules/emailTemplate/emailTemplate.routes";
 import offersRoute from "../modules/offer/offer.routes";
+import orderRoutes from "../modules/order/order.routes";
 import additionalInfoRoutes from "../modules/products/additionalInfo/additionalinfo.routes";
 import productsRoutes from "../modules/products/products.routes";
 import variantRoutes from "../modules/products/variant/variant.routes";
@@ -16,7 +17,6 @@ import subCategoriesRoutes from "../modules/subCategory/subCategory.routes";
 import userRoutes from "../modules/user/user.routes";
 import verificationRoutes from "../modules/verification/verification.routes";
 import wishlistRoute from "../modules/wishlist/wishlist.routes";
-
 const router = Router();
 router.use("/auth", authRouter);
 router.use("/users", userRoutes);
@@ -34,6 +34,7 @@ router.use("/offers", offersRoute);
 router.use("/coupons", couponRoute);
 router.use("/wishlist", wishlistRoute);
 router.use("/cart", cartRoute);
+router.use("/orders", orderRoutes);
 // router.use("/offer-on-product", offerOnProductRoute);
 
 export default router;

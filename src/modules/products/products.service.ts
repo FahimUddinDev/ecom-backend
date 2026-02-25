@@ -147,7 +147,7 @@ export const getProducts = async (query: {
     orderBy.push(
       ...fields.map((field) => ({
         [field]: direction,
-      }))
+      })),
     );
   } else {
     orderBy.push({ createdAt: "desc" });
@@ -175,7 +175,7 @@ export const getProducts = async (query: {
       soldQuantity: true,
       shortDescription: true,
       description: true,
-      orders: true,
+      orderItems: true,
       price: true,
       currency: true,
       sku: true,
@@ -236,7 +236,7 @@ export const updateProduct = async (
     imagesToRemove?: string[];
     thumbnail: string;
     tags: string[];
-  }>
+  }>,
 ) => {
   const existingProduct = await productModel.findProduct({ where: { id } });
   if (!existingProduct) throw new Error("Product not found");
@@ -247,7 +247,7 @@ export const updateProduct = async (
     const filePath = path.join(
       __dirname,
       "../../../../uploads",
-      oldThumbnailPath
+      oldThumbnailPath,
     );
 
     fs.access(filePath, fs.constants.F_OK, (err) => {
@@ -276,7 +276,7 @@ export const updateProduct = async (
     // Remove these from existing image list
     const remainingImages = Array.isArray(existingProduct.images)
       ? (existingProduct.images as string[]).filter(
-          (img) => !data.imagesToRemove!.includes(img)
+          (img) => !data.imagesToRemove!.includes(img),
         )
       : [];
 
@@ -356,7 +356,7 @@ export const getProduct = async (query: { id: number } | { slug: string }) => {
       shortDescription: true,
       description: true,
       price: true,
-      orders: true,
+      orderItems: true,
       currency: true,
       sku: true,
       stockQuantity: true,
@@ -414,18 +414,18 @@ export const deleteProduct = async ({
   const product = await productModel.findProduct({ where: { id } });
   if (!product) throw new HttpError("Product not found!", 404);
 
-  const activeOrderCount = await productModel.countOrders({
-    where: { productId: id, status: "active" },
+  const activeOrderCount = await prisma.orderItem.count({
+    where: { productId: id, order: { status: "pending" } },
   });
 
   if (activeOrderCount > 0) {
     throw new HttpError(
       "Cannot delete product with active orders. Please resolve orders first.",
-      400
+      400,
     );
   }
 
-  const orderCount = await productModel.countOrders({
+  const orderCount = await prisma.orderItem.count({
     where: { productId: id },
   });
 

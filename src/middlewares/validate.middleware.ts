@@ -6,7 +6,7 @@ export const validate =
   (schema: { body: AnySchema }) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await schema.body.validate(req.body, { abortEarly: false });
+      req.body = await schema.body.validate(req.body, { abortEarly: false });
       next();
     } catch (err: any) {
       if (err.name === "ValidationError" && err.inner) {
