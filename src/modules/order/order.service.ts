@@ -326,6 +326,78 @@ export const updateOrderStatus = async (
       ...(status === "delivered" && { deliveredAt: new Date() }),
       ...(status === "shipped" && { shippedAt: new Date() }),
       ...(status === "cancelled" && { cancelledAt: new Date() }),
+      ...(status === "returned" && { returnedAt: new Date() }),
+    },
+  });
+};
+
+export const cancelOrder = async (
+  id: number,
+  userId: number,
+  reason?: string,
+) => {
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const order = await tx.orders.findUnique({
+      where: { id },
+      include: { orderItems: true },
+    });
+
+    if (!order) throw new HttpError("Order not found", 404);
+    if (order.userId !== userId) throw new HttpError("Access denied", 403);
+    if (order.status !== "pending") {
+      throw new HttpError("Only pending orders can be cancelled", 400);
+    }
+
+    // Restore stock
+    for (const item of order.orderItems) {
+      if (item.variantId) {
+        await tx.variant.update({
+          where: { id: item.variantId },
+          data: { stockQuantity: { increment: item.quantity } },
+        });
+      } else {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stockQuantity: { increment: item.quantity } },
+        });
+      }
+    }
+
+    return tx.orders.update({
+      where: { id },
+      data: {
+        status: "cancelled",
+        cancelledAt: new Date(),
+        notes: reason
+          ? `${order.notes || ""}\nCancel Reason: ${reason}`
+          : order.notes,
+      },
+    });
+  });
+};
+
+export const returnOrder = async (
+  id: number,
+  userId: number,
+  data: { message: string; image: string },
+) => {
+  const order = await prisma.orders.findUnique({
+    where: { id },
+  });
+
+  if (!order) throw new HttpError("Order not found", 404);
+  if (order.userId !== userId) throw new HttpError("Access denied", 403);
+  if (order.status !== "delivered") {
+    throw new HttpError("Only delivered orders can be returned", 400);
+  }
+
+  return prisma.orders.update({
+    where: { id },
+    data: {
+      status: "returned",
+      returnedAt: new Date(),
+      returnReason: data.message,
+      returnImage: data.image,
     },
   });
 };

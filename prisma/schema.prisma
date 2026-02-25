@@ -392,6 +392,9 @@ model Orders {
   shippedAt         DateTime?
   deliveredAt       DateTime?
   cancelledAt       DateTime?
+  returnReason      String?       @db.Text
+  returnImage       String?
+  returnedAt        DateTime?
 
   @@index([userId])
   @@index([status])

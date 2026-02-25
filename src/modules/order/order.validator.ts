@@ -43,3 +43,12 @@ export const updateOrderStatusSchema = yup.object({
     .oneOf(Object.values(OrderStatus), "Invalid order status")
     .required("Status is required"),
 });
+
+export const cancelOrderSchema = yup.object({
+  reason: yup.string().optional(),
+});
+
+export const returnOrderSchema = yup.object({
+  message: yup.string().required("Return message/reason is required"),
+  image: yup.string().required("Proof image is required"),
+});
