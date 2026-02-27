@@ -12,6 +12,7 @@ import orderRoutes from "../modules/order/order.routes";
 import additionalInfoRoutes from "../modules/products/additionalInfo/additionalinfo.routes";
 import productsRoutes from "../modules/products/products.routes";
 import variantRoutes from "../modules/products/variant/variant.routes";
+import reviewRoutes from "../modules/reviews/review.routes";
 import smtpRoutes from "../modules/smtp/smtp.routes";
 import subCategoriesRoutes from "../modules/subCategory/subCategory.routes";
 import userRoutes from "../modules/user/user.routes";
@@ -35,6 +36,7 @@ router.use("/coupons", couponRoute);
 router.use("/wishlist", wishlistRoute);
 router.use("/cart", cartRoute);
 router.use("/orders", orderRoutes);
+router.use("/reviews", reviewRoutes);
 // router.use("/offer-on-product", offerOnProductRoute);
 
 export default router;

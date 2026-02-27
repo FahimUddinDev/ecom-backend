@@ -83,6 +83,29 @@ export const updateOrderStatus = async (
   }
 };
 
+export const updateOrderItemStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { user } = req as any;
+    const { status } = req.body;
+    const orderItem = await orderService.updateOrderItemStatus(
+      Number(req.params.id),
+      status,
+      user.data.id,
+      user.data.role,
+    );
+    res.status(200).json({
+      status: "success",
+      data: orderItem,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const cancelOrder = async (
   req: Request,
   res: Response,
@@ -120,6 +143,50 @@ export const returnOrder = async (
     res.status(200).json({
       status: "success",
       data: order,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getReturnOrders = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { user } = req as any;
+    const result = await orderService.getReturnOrders(
+      user.data.id,
+      user.data.role,
+      req.query,
+    );
+    res.status(200).json({
+      status: "success",
+      ...result,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateReturnStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { user } = req as any;
+    const { status } = req.body;
+    const result = await orderService.updateReturnStatus(
+      Number(req.params.id),
+      status,
+      user.data.id,
+      user.data.role,
+    );
+    res.status(200).json({
+      status: "success",
+      data: result,
     });
   } catch (err) {
     next(err);

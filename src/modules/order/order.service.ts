@@ -1,4 +1,5 @@
-import { OrderStatus, Prisma } from "@prisma/client";
+import { OrderStatus, Prisma, ReturnStatus } from "@prisma/client";
+
 import { prisma } from "../../config/prisma";
 import { HttpError } from "../../utils/customError";
 import { generateOrderNumber } from "../../utils/helpers";
@@ -50,7 +51,23 @@ export const createOrder = async (
       const product = await tx.product.findUnique({
         where: { id: item.productId },
         include: {
-          variants: item.variantId ? { where: { id: item.variantId } } : false,
+          variants: item.variantId
+            ? {
+                where: { id: item.variantId },
+                include: {
+                  OfferOnVariant: {
+                    where: {
+                      offer: {
+                        status: "active",
+                        startDate: { lte: new Date() },
+                        endDate: { gte: new Date() },
+                      },
+                    },
+                    include: { offer: true },
+                  },
+                },
+              }
+            : false,
           offers: {
             where: {
               offer: {
@@ -91,14 +108,27 @@ export const createOrder = async (
         throw new HttpError(`Insufficient stock for ${product.name}`, 400);
       }
 
-      // Apply Offer (Pick the best one or latest)
+      // Apply Offer (Pick the best one)
       let discountAmount = 0;
-      if (product.offers.length > 0) {
-        const offer = product.offers[0].offer;
+      const allOffers = [...product.offers.map((o) => o.offer)];
+
+      if (item.variantId && product.variants[0]) {
+        const variant = product.variants[0] as any;
+        if (variant.OfferOnVariant) {
+          const variantOffers = variant.OfferOnVariant.map((o: any) => o.offer);
+          allOffers.push(...variantOffers);
+        }
+      }
+
+      for (const offer of allOffers) {
+        let currentDiscount = 0;
         if (offer.discountType === "percentage") {
-          discountAmount = (price * Number(offer.discountValue)) / 100;
+          currentDiscount = (price * Number(offer.discountValue)) / 100;
         } else {
-          discountAmount = Number(offer.discountValue);
+          currentDiscount = Number(offer.discountValue);
+        }
+        if (currentDiscount > discountAmount) {
+          discountAmount = currentDiscount;
         }
       }
 
@@ -324,9 +354,48 @@ export const updateOrderStatus = async (
     data: {
       status,
       ...(status === "delivered" && { deliveredAt: new Date() }),
+      ...(status === "processing" && { processingAt: new Date() }),
       ...(status === "shipped" && { shippedAt: new Date() }),
       ...(status === "cancelled" && { cancelledAt: new Date() }),
-      ...(status === "returned" && { returnedAt: new Date() }),
+    },
+  });
+};
+
+export const updateOrderItemStatus = async (
+  id: number,
+  status: OrderStatus,
+  userId: number,
+  role: string,
+) => {
+  const item = await prisma.orderItem.findUnique({
+    where: { id },
+    include: { product: true },
+  });
+
+  if (!item) throw new HttpError("Order item not found", 404);
+
+  if (role !== "admin" && role !== "seller") {
+    throw new HttpError(
+      "Only admins and sellers can update order items status.",
+      403,
+    );
+  }
+
+  if (role === "seller") {
+    if (item.product.sellerId !== userId) {
+      throw new HttpError("Access denied", 403);
+    }
+  }
+
+  return prisma.orderItem.update({
+    where: { id },
+    data: {
+      status,
+      ...(status === "pickup" && { pickupAt: new Date() }),
+      ...(status === "delivered" && { deliveredAt: new Date() }),
+      ...(status === "processing" && { processingAt: new Date() }),
+      ...(status === "shipped" && { shippedAt: new Date() }),
+      ...(status === "cancelled" && { cancelledAt: new Date() }),
     },
   });
 };
@@ -379,25 +448,131 @@ export const cancelOrder = async (
 export const returnOrder = async (
   id: number,
   userId: number,
-  data: { message: string; image: string },
+  data: { orderItemId: number; reason: string; images?: string[] },
 ) => {
-  const order = await prisma.orders.findUnique({
-    where: { id },
-  });
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const order = await tx.orders.findUnique({
+      where: { id },
+      include: { orderItems: true },
+    });
 
-  if (!order) throw new HttpError("Order not found", 404);
-  if (order.userId !== userId) throw new HttpError("Access denied", 403);
-  if (order.status !== "delivered") {
-    throw new HttpError("Only delivered orders can be returned", 400);
+    if (!order) throw new HttpError("Order not found", 404);
+    if (order.userId !== userId) throw new HttpError("Access denied", 403);
+    if (order.status !== "delivered") {
+      throw new HttpError("Only delivered orders can be returned", 400);
+    }
+
+    const orderItem = order.orderItems.find(
+      (item) => item.id === Number(data.orderItemId),
+    );
+    if (!orderItem) throw new HttpError("Order item not found", 404);
+
+    const returnRecord = await tx.returnOrder.create({
+      data: {
+        orderId: id,
+        orderItemId: data.orderItemId,
+        reason: data.reason,
+        images: (data.images as any) || [],
+        status: "pending",
+      } as any,
+    });
+
+    return returnRecord;
+  });
+};
+
+export const getReturnOrders = async (
+  userId: number,
+  role: string,
+  query: any,
+) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const where: Prisma.ReturnOrderWhereInput = {};
+  if (role === "user") {
+    where.order = { userId };
+  } else if (role === "seller") {
+    where.orderItem = {
+      product: { sellerId: userId },
+    };
   }
 
-  return prisma.orders.update({
+  const [returns, total] = await Promise.all([
+    prisma.returnOrder.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        order: true,
+        orderItem: { include: { product: true } },
+      },
+    }),
+    prisma.returnOrder.count({ where }),
+  ]);
+
+  return { returns, total, page, limit };
+};
+
+export const updateReturnStatus = async (
+  id: number,
+  status: ReturnStatus,
+  userId: number,
+  role: string,
+) => {
+  const returnOrder = await prisma.returnOrder.findUnique({
     where: { id },
-    data: {
-      status: "returned",
-      returnedAt: new Date(),
-      returnReason: data.message,
-      returnImage: data.image,
-    },
+    include: { orderItem: { include: { product: true } } },
+  });
+
+  if (!returnOrder) throw new HttpError("Return request not found", 404);
+
+  if (role !== "admin" && role !== "seller") {
+    throw new HttpError(
+      "Only admins and sellers can update return status.",
+      403,
+    );
+  }
+
+  if (role === "seller") {
+    if (returnOrder.orderItem.product.sellerId !== userId) {
+      throw new HttpError("Access denied", 403);
+    }
+  }
+
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const updatedReturn = await tx.returnOrder.update({
+      where: { id },
+      data: { status },
+    });
+
+    // If approved or returned, update the OrderItem status
+    if (status === "approved" || status === "returned") {
+      await tx.orderItem.update({
+        where: { id: returnOrder.orderItemId },
+        data: { status: "returned" },
+      });
+
+      // Restore stock
+      if (returnOrder.orderItem.variantId) {
+        await tx.variant.update({
+          where: { id: returnOrder.orderItem.variantId },
+          data: {
+            stockQuantity: { increment: returnOrder.orderItem.quantity },
+          },
+        });
+      } else {
+        await tx.product.update({
+          where: { id: returnOrder.orderItem.productId },
+          data: {
+            stockQuantity: { increment: returnOrder.orderItem.quantity },
+          },
+        });
+      }
+    }
+
+    return updatedReturn;
   });
 };

@@ -1,3 +1,4 @@
+import { ReturnStatus } from "@prisma/client";
 import * as yup from "yup";
 
 export enum PaymentMethod {
@@ -49,6 +50,14 @@ export const cancelOrderSchema = yup.object({
 });
 
 export const returnOrderSchema = yup.object({
-  message: yup.string().required("Return message/reason is required"),
-  image: yup.string().required("Proof image is required"),
+  orderItemId: yup.number().required("Order Item ID is required"),
+  reason: yup.string().required("Return reason is required"),
+  images: yup.array().of(yup.string()).optional(),
+});
+
+export const updateReturnStatusSchema = yup.object({
+  status: yup
+    .mixed<ReturnStatus>()
+    .oneOf(Object.values(ReturnStatus), "Invalid return status")
+    .required("Status is required"),
 });

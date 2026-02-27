@@ -89,3 +89,12 @@ export const countOrders = async (query: Prisma.OrdersCountArgs) => {
 export const findOrderItem = async (query: Prisma.OrderItemFindManyArgs) => {
   return prisma.orderItem.findMany(query);
 };
+export const updateOrderItems = async (
+  id: number,
+  data: Prisma.OrdersUpdateInput,
+) => {
+  return prisma.orderItems.update({
+    where: { id },
+    data,
+  });
+};

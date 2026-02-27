@@ -19,6 +19,7 @@ enum DiscountType {
 
 enum OrderStatus {
   pending
+  pickup
   processing
   shipped
   delivered
@@ -37,6 +38,13 @@ enum PaymentMethod {
   cash_on_delivery
   stripe
   sslcommerz
+}
+
+enum ReturnStatus {
+  pending
+  approved
+  rejected
+  returned
 }
 
 model User {
@@ -154,15 +162,21 @@ model AdditionalInfo {
 }
 
 model Review {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  rating    Int
-  comment   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int        @id @default(autoincrement())
+  userId      Int
+  user        User       @relation(fields: [userId], references: [id])
+  orderId     Int?
+  order       Orders?    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItemId Int?
+  orderItem   OrderItem? @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  productId   Int
+  product     Product    @relation(fields: [productId], references: [id])
+  rating      Int
+  comment     String
+  images      Json?
+  status      Status     @default(active)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Variant {
@@ -388,13 +402,12 @@ model Orders {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   currency          String        @default("USD")
-  confirmedAt       DateTime?
+  processingAt      DateTime?
   shippedAt         DateTime?
   deliveredAt       DateTime?
   cancelledAt       DateTime?
-  returnReason      String?       @db.Text
-  returnImage       String?
-  returnedAt        DateTime?
+  returnOrders      ReturnOrder[]
+  reviews           Review[]
 
   @@index([userId])
   @@index([status])
@@ -402,16 +415,37 @@ model Orders {
 }
 
 model OrderItem {
-  id        Int      @id @default(autoincrement())
-  orderId   Int
-  order     Orders   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  variantId Int?
-  variant   Variant? @relation(fields: [variantId], references: [id])
-  quantity  Int      @default(1)
-  price     Decimal  @db.Decimal(10, 2)
-  total     Decimal  @db.Decimal(10, 2)
+  id           Int           @id @default(autoincrement())
+  status       OrderStatus   @default(pending)
+  orderId      Int
+  order        Orders        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    Int
+  product      Product       @relation(fields: [productId], references: [id])
+  variantId    Int?
+  variant      Variant?      @relation(fields: [variantId], references: [id])
+  quantity     Int           @default(1)
+  price        Decimal       @db.Decimal(10, 2)
+  total        Decimal       @db.Decimal(10, 2)
+  pickupAt     DateTime?
+  processingAt DateTime?
+  shippedAt    DateTime?
+  deliveredAt  DateTime?
+  cancelledAt  DateTime?
+  returnOrders ReturnOrder[]
+  isReviewed   Boolean       @default(false)
+  reviews      Review[]
+}
+
+model ReturnOrder {
+  id          Int          @id @unique @default(autoincrement())
+  order       Orders       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     Int
+  orderItemId Int
+  orderItem   OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  reason      String       @db.Text
+  images      Json?
+  status      ReturnStatus @default(pending)
+  createdAt   DateTime     @default(now())
 }
 
 generator client {
