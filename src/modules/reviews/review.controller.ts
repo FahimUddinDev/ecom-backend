@@ -35,7 +35,9 @@ export const createReview = async (
     if (orderItem.status !== "delivered") {
       throw new HttpError("You can't review this order!", 400);
     }
-
+    if (orderItem.isReviewed) {
+      throw new HttpError("You have already reviewed this order!", 400);
+    }
     const review = await reviewService.createReview({
       productId: +productId,
       userId: user.data.id,
@@ -45,6 +47,8 @@ export const createReview = async (
       comment,
       images,
     });
+
+    await reviewService.updateOrderItem(+orderItemId);
 
     return res.status(201).json(review);
   } catch (err) {
