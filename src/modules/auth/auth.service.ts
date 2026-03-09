@@ -73,7 +73,7 @@ export const loginUser = async ({
         role: user.role,
       },
     },
-    process.env.JWT_SECRET || "eyJmb28iOiJiYXIifQ"
+    process.env.JWT_SECRET || "eyJmb28iOiJiYXIifQ",
   );
   return {
     token,
@@ -150,7 +150,7 @@ export const googleLoginUser = async (payload: GooglePayload) => {
         role: accountUser?.role,
       },
     },
-    process.env.JWT_SECRET || "eyJmb28iOiJiYXIifQ"
+    process.env.JWT_SECRET || "eyJmb28iOiJiYXIifQ",
   );
 
   return {

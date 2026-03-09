@@ -80,7 +80,7 @@ export const updateSubCategory = async (
   data: Partial<{
     name: string;
     thumbnail: string | null;
-  }>
+  }>,
 ) => {
   if (role !== "admin") {
     throw new HttpError("Permission denied!", 403);
@@ -135,7 +135,7 @@ export const deleteSubCategory = async ({
   if (childCategoriesCount > 0) {
     throw new HttpError(
       `Cannot delete category. It has ${childCategoriesCount} subcategories. Please delete all subcategories first.`,
-      400
+      400,
     );
   }
 
@@ -147,7 +147,7 @@ export const deleteSubCategory = async ({
   if (productsCount > 0) {
     throw new HttpError(
       `Cannot delete category. It has ${productsCount} products. Please move or delete all products first.`,
-      400
+      400,
     );
   }
 

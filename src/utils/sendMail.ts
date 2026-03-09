@@ -31,7 +31,7 @@ const createTransporter = ({
 
 // Send password mail with failover SMTP support
 export const sendPasswordMail = async (
-  data: SendMailData
+  data: SendMailData,
 ): Promise<boolean> => {
   const smtpConfigs: SmtpConfig[] = await findAllSmtp();
 
@@ -74,7 +74,7 @@ export const sendPasswordMail = async (
     } catch (err) {
       console.error(
         `Failed with SMTP: ${smtpConfig.host}`,
-        err instanceof Error ? err.message : err
+        err instanceof Error ? err.message : err,
       );
       lastError = err;
     }
@@ -82,6 +82,6 @@ export const sendPasswordMail = async (
 
   throw new Error(
     "All SMTP servers failed. Last error: " +
-      (lastError instanceof Error ? lastError.message : String(lastError))
+      (lastError instanceof Error ? lastError.message : String(lastError)),
   );
 };

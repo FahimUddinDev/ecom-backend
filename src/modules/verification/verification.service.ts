@@ -73,7 +73,7 @@ export const forgotPasswordVerify = async ({
         id: userId,
       },
     },
-    process.env.JWT_SECRET || "eyJmb28iOiJiYXIifQ"
+    process.env.JWT_SECRET || "eyJmb28iOiJiYXIifQ",
   );
   await verificationModel.deleteVerification(verification.token);
   return { token };
@@ -93,7 +93,7 @@ export const createKyc = async ({
     if (
       kycExists.find(
         (k: { status: string }) =>
-          k.status === "pending" || k.status === "approved"
+          k.status === "pending" || k.status === "approved",
       )
     ) {
       throw new HttpError("KYC is already in process or approved", 400);

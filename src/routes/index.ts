@@ -2,18 +2,31 @@
 import { Router } from "express";
 import addressRoutes from "../modules/address/address.routes";
 import authRouter from "../modules/auth/auth.routes";
+import cartRoute from "../modules/cart/cart.routes";
 import categoriesRoutes from "../modules/category/category.routes";
 import childCategoriesRoutes from "../modules/childCategory/childCategory.routes";
+import commentRoutes from "../modules/comments/comments.routes";
+import couponRoute from "../modules/coupon/coupon.routes";
 import emailTemplateRoutes from "../modules/emailTemplate/emailTemplate.routes";
+import offersRoute from "../modules/offer/offer.routes";
+import orderRoutes from "../modules/order/order.routes";
+import additionalInfoRoutes from "../modules/products/additionalInfo/additionalinfo.routes";
 import productsRoutes from "../modules/products/products.routes";
+import variantRoutes from "../modules/products/variant/variant.routes";
+import reviewRoutes from "../modules/reviews/review.routes";
 import smtpRoutes from "../modules/smtp/smtp.routes";
+
 import subCategoriesRoutes from "../modules/subCategory/subCategory.routes";
 import userRoutes from "../modules/user/user.routes";
 import verificationRoutes from "../modules/verification/verification.routes";
+<<<<<<< HEAD
 import blogRoutes from "../modules/blog/blog.routes";
 import blogCategoryRoutes from "../modules/blogCategory/blogCategory.routes";
 import blogCommentRoutes from "../modules/blogComment/blogComment.routes";
 
+=======
+import wishlistRoute from "../modules/wishlist/wishlist.routes";
+>>>>>>> ee952535153ee1d8f97ba1aaa03d5784d5bfbea8
 const router = Router();
 router.use("/auth", authRouter);
 router.use("/users", userRoutes);
@@ -25,8 +38,21 @@ router.use("/sub-categories", subCategoriesRoutes);
 router.use("/child-categories", childCategoriesRoutes);
 router.use("/address", addressRoutes);
 router.use("/products", productsRoutes);
+<<<<<<< HEAD
 router.use("/blogs", blogRoutes)
 router.use("/blog-categories", blogCategoryRoutes)
 router.use("/blog-comments", blogCommentRoutes)
+=======
+router.use("/variants", variantRoutes);
+router.use("/additional-info", additionalInfoRoutes);
+router.use("/offers", offersRoute);
+router.use("/coupons", couponRoute);
+router.use("/wishlist", wishlistRoute);
+router.use("/cart", cartRoute);
+router.use("/orders", orderRoutes);
+router.use("/reviews", reviewRoutes);
+router.use("/comments", commentRoutes);
+// router.use("/offer-on-product", offerOnProductRoute);
+>>>>>>> ee952535153ee1d8f97ba1aaa03d5784d5bfbea8
 
 export default router;
