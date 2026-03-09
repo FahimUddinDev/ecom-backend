@@ -5,6 +5,7 @@ import authRouter from "../modules/auth/auth.routes";
 import cartRoute from "../modules/cart/cart.routes";
 import categoriesRoutes from "../modules/category/category.routes";
 import childCategoriesRoutes from "../modules/childCategory/childCategory.routes";
+import commentRoutes from "../modules/comments/comments.routes";
 import couponRoute from "../modules/coupon/coupon.routes";
 import emailTemplateRoutes from "../modules/emailTemplate/emailTemplate.routes";
 import offersRoute from "../modules/offer/offer.routes";
@@ -14,6 +15,7 @@ import productsRoutes from "../modules/products/products.routes";
 import variantRoutes from "../modules/products/variant/variant.routes";
 import reviewRoutes from "../modules/reviews/review.routes";
 import smtpRoutes from "../modules/smtp/smtp.routes";
+
 import subCategoriesRoutes from "../modules/subCategory/subCategory.routes";
 import userRoutes from "../modules/user/user.routes";
 import verificationRoutes from "../modules/verification/verification.routes";
@@ -37,6 +39,7 @@ router.use("/wishlist", wishlistRoute);
 router.use("/cart", cartRoute);
 router.use("/orders", orderRoutes);
 router.use("/reviews", reviewRoutes);
+router.use("/comments", commentRoutes);
 // router.use("/offer-on-product", offerOnProductRoute);
 
 export default router;

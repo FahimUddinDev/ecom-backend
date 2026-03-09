@@ -30,7 +30,7 @@ export const handleUpload = (fields: { [field: string]: number }) => {
 
         if (uploadedFiles && Array.isArray(uploadedFiles)) {
           const publicPaths = uploadedFiles.map(
-            (file: Express.Multer.File) => `/public/${file.filename}`
+            (file: Express.Multer.File) => `/public/${file.filename}`,
           );
           req.body[fieldName] =
             fields[fieldName] === 1 ? publicPaths[0] : publicPaths;

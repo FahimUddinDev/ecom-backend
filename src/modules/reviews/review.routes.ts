@@ -10,7 +10,7 @@ const router = Router();
 
 router
   .route("/")
-  // .get(reviewController.getReviews)
+  .get(reviewController.getReviews)
   .post(
     authenticate,
     handleUpload({ images: 10 }),
@@ -18,9 +18,15 @@ router
     reviewController.createReview,
   );
 
-// router
-//   .route("/:id")
-//   .get(reviewController.getReview)
-//   .delete(authenticate, reviewController.deleteReview);
+router
+  .route("/:id")
+  .get(reviewController.getReview)
+  .patch(
+    authenticate,
+    handleUpload({ images: 10 }),
+    validate({ body: reviewSchema.partial() }),
+    reviewController.updateReview,
+  )
+  .delete(authenticate, reviewController.deleteReview);
 
 export default router;

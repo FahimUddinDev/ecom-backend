@@ -1,3 +1,4 @@
+import { HttpError } from "../../utils/customError";
 import * as reviewModel from "./review.model";
 
 export const getProduct = async (productId: number) => {
@@ -67,91 +68,92 @@ export const createReview = async ({
   });
 };
 
-// export const deleteReview = async ({ id }: { id: number }) => {
-//   const review = await reviewModel.findReview({
-//     where: { id },
-//   });
+export const updateReview = async (
+  id: number,
+  data: {
+    rating?: number;
+    comment?: string;
+    images?: string[];
+  },
+) => {
+  return reviewModel.updateReview(id, data);
+};
 
-//   if (!review) {
-//     throw new HttpError("Review not found!", 404);
-//   }
+export const deleteReview = async (id: number) => {
+  await reviewModel.deleteReview(id);
+  return { message: "Review deleted successfully" };
+};
 
-//   await reviewModel.deleteReview(id);
+export const getReview = async (query: { id: number }) => {
+  const review = await reviewModel.findReview({
+    where: {
+      id: query.id,
+    },
+    include: {
+      product: true,
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          createdAt: true,
+          role: true,
+          status: true,
+          verified: true,
+          avatar: true,
+          kyc: {
+            select: {
+              status: true,
+            },
+          },
+        },
+      },
+    },
+  });
 
-//   return { message: "Review deleted successfully" };
-// };
+  if (!review) {
+    throw new HttpError("Review Not found!", 404);
+  }
 
-// export const getReview = async (query: { id: number }) => {
-//   const review = await reviewModel.findReview({
-//     where: {
-//       id: query.id,
-//     },
-//     include: {
-//       product: true,
-//       user: {
-//         select: {
-//           id: true,
-//           firstName: true,
-//           lastName: true,
-//           email: true,
-//           createdAt: true,
-//           role: true,
-//           status: true,
-//           verified: true,
-//           avatar: true,
-//           kyc: {
-//             select: {
-//               status: true,
-//             },
-//           },
-//         },
-//       },
-//     },
-//   });
+  return review;
+};
 
-//   if (!review) {
-//     throw new HttpError("Review Not found!", 404);
-//   }
+export const getReviews = async (query: {
+  page?: string;
+  limit?: string;
+  userId?: string;
+  productId?: string;
+}) => {
+  const page = query.page ? Number(query.page) : 1;
+  const limit = query.limit ? Number(query.limit) : 10;
+  const skip = (page - 1) * limit;
 
-//   return review;
-// };
+  const where: any = {};
 
-// export const getReviews = async (query: {
-//   page?: string;
-//   limit?: string;
-//   userId?: string;
-//   productId?: string;
-// }) => {
-//   const page = query.page ? Number(query.page) : 1;
-//   const limit = query.limit ? Number(query.limit) : 10;
-//   const skip = (page - 1) * limit;
+  if (query.userId) {
+    where.userId = Number(query.userId);
+  }
 
-//   const where: Prisma.ReviewWhereInput = {};
+  if (query.productId) {
+    where.productId = Number(query.productId);
+  }
 
-//   if (query.userId) {
-//     where.userId = Number(query.userId);
-//   }
+  const orderBy = [{ createdAt: "desc" as const }];
 
-//   if (query.productId) {
-//     where.productId = Number(query.productId);
-//   }
+  const total = await reviewModel.countReviews({ where });
 
-//   const orderBy: Prisma.ReviewOrderByWithRelationInput[] = [];
-//   orderBy.push({ createdAt: "desc" });
+  const reviews = await reviewModel.findReviews({
+    where,
+    skip,
+    take: limit,
+    orderBy,
+  });
 
-//   const total = await reviewModel.countReviews({ where });
-
-//   const reviews = await reviewModel.findReviews({
-//     where,
-//     skip,
-//     take: limit,
-//     orderBy,
-//   });
-
-//   return {
-//     total,
-//     page,
-//     limit,
-//     reviews,
-//   };
-// };
+  return {
+    total,
+    page,
+    limit,
+    reviews,
+  };
+};

@@ -74,61 +74,84 @@ export const createReview = async (data: {
   });
 };
 
-// export const updateReview = async (
-//   id: number,
-//   data: Prisma.ReviewUpdateInput,
-// ): Promise<Review> => {
-//   return prisma.review.update({
-//     where: { id },
-//     data,
-//   });
-// };
+export const updateReview = async (
+  id: number,
+  data: Prisma.ReviewUpdateInput,
+): Promise<Review> => {
+  return prisma.review.update({
+    where: { id },
+    data,
+    include: {
+      order: true,
+      orderItem: true,
+      product: true,
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          createdAt: true,
+          role: true,
+          status: true,
+          verified: true,
+          avatar: true,
+          kyc: {
+            select: {
+              status: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
 
-// export const deleteReview = async (id: number): Promise<Review> => {
-//   return prisma.review.delete({
-//     where: { id },
-//   });
-// };
+export const deleteReview = async (id: number): Promise<Review> => {
+  return prisma.review.delete({
+    where: { id },
+  });
+};
 
-// export const findReview = async (
-//   query: Prisma.ReviewFindUniqueArgs,
-// ): Promise<Review | null> => {
-//   return prisma.review.findUnique(query);
-// };
+export const findReview = async (
+  query: Prisma.ReviewFindUniqueArgs,
+): Promise<Review | null> => {
+  return prisma.review.findUnique(query);
+};
 
-// export const findReviews = async (
-//   query: Prisma.ReviewFindManyArgs,
-// ): Promise<Review[]> => {
-//   return prisma.review.findMany({
-//     ...query,
-//     include: {
-//       order: true,
-//       orderItem: true,
-//       product: true,
-//       user: {
-//         select: {
-//           id: true,
-//           firstName: true,
-//           lastName: true,
-//           email: true,
-//           createdAt: true,
-//           role: true,
-//           status: true,
-//           verified: true,
-//           avatar: true,
-//           kyc: {
-//             select: {
-//               status: true,
-//             },
-//           },
-//         },
-//       },
-//     },
-//   });
-// };
+export const findReviews = async (
+  query: Prisma.ReviewFindManyArgs,
+): Promise<Review[]> => {
+  return prisma.review.findMany({
+    ...query,
+    include: {
+      order: true,
+      orderItem: true,
+      product: true,
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          createdAt: true,
+          role: true,
+          status: true,
+          verified: true,
+          avatar: true,
+          kyc: {
+            select: {
+              status: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
 
-// export const countReviews = async (
-//   query: Prisma.ReviewCountArgs,
-// ): Promise<number> => {
-//   return prisma.review.count(query);
-// };
+export const countReviews = async (
+  query: Prisma.ReviewCountArgs,
+): Promise<number> => {
+  return prisma.review.count(query);
+};

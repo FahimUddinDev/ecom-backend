@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import * as fs from "fs";
+import * as path from "path";
 import { prisma } from "../../config/prisma";
 import { HttpError } from "../../utils/customError";
 import * as childCategoryModel from "./childCategory.model";
@@ -68,7 +68,7 @@ export const updateChildCategory = async (
   data: Partial<{
     name: string;
     thumbnail: string | null;
-  }>
+  }>,
 ) => {
   if (role !== "admin") {
     throw new HttpError("Permission denied!", 403);
@@ -122,7 +122,7 @@ export const deleteChildCategory = async ({
   if (productsCount > 0) {
     throw new HttpError(
       `Cannot delete category. It has ${productsCount} products. Please move or delete all products first.`,
-      400
+      400,
     );
   }
 
