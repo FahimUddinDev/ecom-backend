@@ -19,14 +19,11 @@ import smtpRoutes from "../modules/smtp/smtp.routes";
 import subCategoriesRoutes from "../modules/subCategory/subCategory.routes";
 import userRoutes from "../modules/user/user.routes";
 import verificationRoutes from "../modules/verification/verification.routes";
-<<<<<<< HEAD
 import blogRoutes from "../modules/blog/blog.routes";
 import blogCategoryRoutes from "../modules/blogCategory/blogCategory.routes";
 import blogCommentRoutes from "../modules/blogComment/blogComment.routes";
 
-=======
 import wishlistRoute from "../modules/wishlist/wishlist.routes";
->>>>>>> ee952535153ee1d8f97ba1aaa03d5784d5bfbea8
 const router = Router();
 router.use("/auth", authRouter);
 router.use("/users", userRoutes);
@@ -38,11 +35,9 @@ router.use("/sub-categories", subCategoriesRoutes);
 router.use("/child-categories", childCategoriesRoutes);
 router.use("/address", addressRoutes);
 router.use("/products", productsRoutes);
-<<<<<<< HEAD
 router.use("/blogs", blogRoutes)
 router.use("/blog-categories", blogCategoryRoutes)
 router.use("/blog-comments", blogCommentRoutes)
-=======
 router.use("/variants", variantRoutes);
 router.use("/additional-info", additionalInfoRoutes);
 router.use("/offers", offersRoute);
@@ -53,6 +48,5 @@ router.use("/orders", orderRoutes);
 router.use("/reviews", reviewRoutes);
 router.use("/comments", commentRoutes);
 // router.use("/offer-on-product", offerOnProductRoute);
->>>>>>> ee952535153ee1d8f97ba1aaa03d5784d5bfbea8
 
 export default router;
